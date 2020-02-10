@@ -7,7 +7,14 @@ project(bopt_grasp_quality)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED
+std_msgs
+geometry_msgs  
+message_generation
+roscpp
+rospy
+# service
+)
 
 
 ## System dependencies are found with CMake's conventions
@@ -35,10 +42,8 @@ find_package(catkin REQUIRED)
 ##     * add a exec_depend tag for "message_runtime"
 ## * In this file (CMakeLists.txt):
 ##   * add "message_generation" and every package in MSG_DEP_SET to
-find_package(catkin REQUIRED COMPONENTS
 
- rospy
- message_generation)
+
 ##   * add "message_runtime" and every package in MSG_DEP_SET to
 ##     catkin_package(CATKIN_DEPENDS ...)
 ##   * uncomment the add_*_files sections below as needed
@@ -70,7 +75,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
    DEPENDENCIES
-   std_msgs  # Or other packages containing msgs
+  #  std_msgs 
+   geometry_msgs
  )
 
 ################################################
@@ -107,8 +113,9 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES bopt_grasp_quality
-#  CATKIN_DEPENDS other_catkin_pkg
+#  CATKIN_DEPENDS message_runtime rospy std_msgs geometry_msgs
 #  DEPENDS system_lib
+
 )
 
 ###########
@@ -119,7 +126,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
-# ${catkin_INCLUDE_DIRS}
+${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library

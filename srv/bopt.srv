@@ -1,5 +1,5 @@
-Pose pose
-float score
+geometry_msgs/Pose pose
+float32 score
 ---
-float Ybest
-float Xi1 
+float32 Ybest
+float32 Xi1 
