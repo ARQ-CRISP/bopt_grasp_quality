@@ -7,7 +7,7 @@ import numpy as np
 from geometry_msgs.msg import Pose
 
 from bopt_grasp_quality.srv import bopt, boptResponse
-from bayesopt_quality import BOGrasp_Quality
+from bayesian_optimization import BOGrasp_Quality
 
 
 class BO_Engine():
