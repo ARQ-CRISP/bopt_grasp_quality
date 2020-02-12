@@ -1,5 +1,6 @@
-geometry_msgs/Pose pose
-float64 score
+geometry_msgs/Pose query
+bool foundmin
+float64 minX
+float64 minY
 ---
-float64 Ybest
-float64 Xi1 
+float64 Y
