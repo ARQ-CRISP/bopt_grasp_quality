@@ -22,6 +22,7 @@ class BO_Node():
         rospy.wait_for_service('bayes_optimization')
         self.send_query = rospy.ServiceProxy('bayes_optimization', bopt)
         self.optimizer = Skopt_BO(n, self.min_function, params, lb=lb, ub=ub)
+        self.iters = 0
         try:
             x_out, mvalue = self.optimizer.optimize()
             res = self.send_query(Pose(), True, x_out, mvalue) # here the optimization has finished
@@ -43,10 +44,12 @@ class BO_Node():
     def min_function(self, Xin):
         p = deepcopy(self.init_pose)
         p.position.x = float(Xin)
+        rospy.loginfo('{:^10} {}'.format('ITERATION', self.iters))
         rospy.loginfo('Estimating metric at ({:.3f}, {:.3f}, {:.3f}) ...'.format(p.position.x, p.position.y, p.position.z))
         res = self.send_query(p, False, np.nan, np.nan)
         rospy.loginfo('Estimatation of the metric obtained: {:.3f}'.format(res.Y))
         # res= boptResponse()
+        self.iters += 1
         return res.Y
 
 
@@ -74,28 +77,36 @@ def TF2Pose(TF_msg):
 if __name__ == "__main__":
     rospy.init_node('ros_bo')
 
+    lb_x = rospy.get_param('~lb_x', -.2)
+    ub_x = rospy.get_param('~ub_x', .2)
+    ee_link = rospy.get_param('~ee_link', 'hand_root')
+    base_link = rospy.get_param('~base_link', 'world')
+
     tf_buffer = Buffer(rospy.Duration(50))
     tf_listener = TransformListener(tf_buffer)
     rospy.loginfo(rospy.get_name().split('/')[1] + ': Initialization....')
     rospy.loginfo(rospy.get_name().split('/')[1] + ': Getting current pose....')
     rospy.sleep(0.5)
     try:
-        ARM_TF = tf_buffer.lookup_transform('world', 'hand_root', rospy.Time().now(), rospy.Duration(0.1))
+        ARM_TF = tf_buffer.lookup_transform(base_link, ee_link, rospy.Time().now(), rospy.Duration(0.1))
         current_pose = TF2Pose(ARM_TF)
     except Exception as e:
         rospy.logerr('error in finding the arm...')
-        rospy.logerr('Starting at (0,0,0), (0,0,0,1)')
+        rospy.logerr('Starting at (0, 0, 0), (0, 0, 0, 1)')
+
         current_pose = PoseStamped()
         current_pose.pose.orientation.w = 1.
         
     pose = [
         [current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z],
         [current_pose.pose.orientation.x, current_pose.pose.orientation.y, current_pose.pose.orientation.z, current_pose.pose.orientation.w]]
-    rospy.loginfo(rospy.get_name().split('/')[1] + ': starting at: ({:.3f},{:.3f},{:.3f})-({:.3f},{:.3f},{:.3f},{:.3f})'.format(*pose[0] + pose[1]))
+    rospy.loginfo(
+        rospy.get_name().split('/')[1] + ': starting at: ({:.3f}, {:.3f}, {:.3f})-({:.3f}, {:.3f}, {:.3f}, {:.3f})'.format(*pose[0] + pose[1])
+        )
 
     params = {}
     n = 1
-    lb = current_pose.pose.position.x - .2 * np.ones((n,))
-    ub = current_pose.pose.position.x + .2 * np.ones((n,))
+    lb = current_pose.pose.position.x + lb_x * np.ones((n,))
+    ub = current_pose.pose.position.x + ub_x * np.ones((n,))
     
     BO_Node(n, params, lb= lb, ub=ub, init_pose=current_pose.pose)
