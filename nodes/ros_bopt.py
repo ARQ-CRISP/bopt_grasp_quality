@@ -64,9 +64,9 @@ def TF2Pose(TF_msg):
     new_pose.pose.position.z = TF_msg.transform.translation.z
 
     new_pose.pose.orientation.x = TF_msg.transform.rotation.x
-    new_pose.pose.orientation.x = TF_msg.transform.rotation.x
-    new_pose.pose.orientation.x = TF_msg.transform.rotation.x
-    new_pose.pose.orientation.x = TF_msg.transform.rotation.x
+    new_pose.pose.orientation.y = TF_msg.transform.rotation.y
+    new_pose.pose.orientation.z = TF_msg.transform.rotation.z
+    new_pose.pose.orientation.w = TF_msg.transform.rotation.w
 
     return new_pose
 
@@ -79,11 +79,23 @@ if __name__ == "__main__":
     rospy.loginfo(rospy.get_name().split('/')[1] + ': Initialization....')
     rospy.loginfo(rospy.get_name().split('/')[1] + ': Getting current pose....')
     rospy.sleep(0.5)
-    ARM_TF = tf_buffer.lookup_transform('world', 'hand_root', rospy.Time().now(), rospy.Duration(0.1))
-    current_pose = TF2Pose(ARM_TF)
+    try:
+        ARM_TF = tf_buffer.lookup_transform('world', 'hand_root', rospy.Time().now(), rospy.Duration(0.1))
+        current_pose = TF2Pose(ARM_TF)
+    except Exception as e:
+        rospy.logerr('error in finding the arm...')
+        rospy.logerr('Starting at (0,0,0), (0,0,0,1)')
+        current_pose = PoseStamped()
+        current_pose.pose.orientation.w = 1.
+        
+    pose = [
+        [current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z],
+        [current_pose.pose.orientation.x, current_pose.pose.orientation.y, current_pose.pose.orientation.z, current_pose.pose.orientation.w]]
+    rospy.loginfo(rospy.get_name().split('/')[1] + ': starting at: ({:.3f},{:.3f},{:.3f})-({:.3f},{:.3f},{:.3f},{:.3f})'.format(*pose[0] + pose[1]))
 
     params = {}
     n = 1
+    lb = current_pose.pose.position.x - .2 * np.ones((n,))
+    ub = current_pose.pose.position.x + .2 * np.ones((n,))
     
-    
-    BO_Node(n, params, lb= -5*np.ones((n,)), ub=5*np.ones((n,)), init_pose=current_pose.pose)
+    BO_Node(n, params, lb= lb, ub=ub, init_pose=current_pose.pose)
