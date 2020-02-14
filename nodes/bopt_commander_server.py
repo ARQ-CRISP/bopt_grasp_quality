@@ -15,16 +15,20 @@ class Bopt_Commander_Mock():
     def __init__(self, fun, arm_group='ur5_arm'):
         rospy.init_node('bopt_metric_mock')
         self.ur5_commander = MoveGroupCommander(arm_group)
-        self.IK = IK('world', 'hand_root', epsilon=1e-3, timeout=0.1, solve_type='Speed')
+        # self.IK = IK('world', 'hand_root', epsilon=1e-3, timeout=0.1, solve_type='Speed')
         self.metric_mock = fun
         self.service = rospy.Service('bayes_optimization', bopt, self.manage_query)
         self.query_hist = []
         self.reply_hist = []
         self.min_value = None
+
+        target = self.ur5_commander.get_named_target_values('start')
+        self.ur5_commander.go(target)
         rate = rospy.Rate(30)
-        
+        axis = [-10, 10, -80, 80]
+        axis = [-1, 1, -8, 8]
         fig = plt.figure()
-        plt.axis([-10, 10, -80, 80])
+        plt.axis(axis)
         # plt.axis([-1.5, 1.5, 0, 6])
         plt.ion()
         self.plot_fun()
@@ -33,7 +37,7 @@ class Bopt_Commander_Mock():
         while not rospy.is_shutdown():
             plt.cla()
             fig.sca(*ax)
-            plt.axis([-10, 10, -80, 80])
+            plt.axis(axis)
             # fig.sca(fig.get_axes())
             self.plot_fun()
             self.plot_datapoints()
@@ -70,7 +74,7 @@ class Bopt_Commander_Mock():
         # self.ur5_commander.execute(trajectory, wait=True)
 
         x = query.position.x
-        Y = self.metric_mock(x) + np.random.normal(0.0, scale=.5) # the metric is noisy
+        Y = self.metric_mock(x) + np.random.normal(0.0, scale=.05) # the metric is noisy
 
         self.query_hist.append(x)
         self.reply_hist.append(Y)
@@ -105,8 +109,14 @@ class Bopt_Commander_Mock():
 
 
 if __name__ == "__main__":
-    p = np.poly1d(np.poly([-5, -3, 0, 3]))
-    fun = lambda x: p(x) + 2 * np.cos(2 * np.pi * 5 * x)
+    from scipy.stats import norm
+    gaussian1 = lambda x: norm.pdf(x, 0.0, .1)
+    gaussian2 = lambda x: norm.pdf(x, 0.25, .08)
+    l = [-.5 -.3, 0., .3]
+    l = [ll for ll in l]
+    p = np.poly1d(np.poly(l))
+    p = np.poly1d([1, .4, 0])
+    fun = lambda x: p(x) + .1 * np.cos(2 * np.pi * 10 * x) - gaussian1(x) - gaussian2(x) 
     x = np.arange(-10, 10, 0.01)
     
     Bopt_Commander_Mock(fun)
