@@ -1,5 +1,5 @@
 #!/bin/python
-from bayesopt_quality import BOGrasp_Quality
-from skopt_quality import BO_Grasp_Quality
+from bayesopt_quality import BayesOpt_BO
+from skopt_quality import Skopt_BO
 
-__all__ = ['BOGrasp_Quality', 'BO_Grasp_Quality']
+__all__ = ['BayesOpt_BO', 'Skopt_BO']

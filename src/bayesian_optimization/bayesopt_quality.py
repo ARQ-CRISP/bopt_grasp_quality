@@ -6,24 +6,13 @@ from time import clock, sleep
 import matplotlib.pyplot as plt
 
 import bayesopt
-from bayesoptmodule import BayesOptContinuous, BayesOptDiscrete
-
-# def f(X):
-#     total = 5.0
-#     for value in X:
-#         total = total + (value - 0.33) * (value - 0.33)
-#     # a=input('press to continue...')
-#     # print("wait 1 sec...")
-#     # sleep(1)
-#     return total
+from bayesoptmodule import BayesOptContinuous
 
 
 
-
-
-class BOGrasp_Quality(BayesOptContinuous):
+class BayesOpt_BO(BayesOptContinuous):
     def __init__(self, n, f, params, lb=None, ub=None):
-        super(BOGrasp_Quality, self).__init__(n)
+        super(BayesOpt_BO, self).__init__(n)
         # print(self.parameters)
         self.parameters = params
         self.upper_bound = ub if ub is not None else np.ones((n,))
@@ -74,7 +63,7 @@ if __name__ == "__main__":
     # ub = np.ones((n,))
 
     f = lambda x: p(x) + 1 * np.sin(2 * np.pi * 3 * x) + np.random.normal(0.0, scale=.5)
-    bo = BOGrasp_Quality(
+    bo = BayesOpt_BO(
         n=n, 
         f=f,
         params=params, 
