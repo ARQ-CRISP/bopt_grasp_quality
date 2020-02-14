@@ -1,0 +1,10 @@
+<launch>
+    <arg name="xacro_path"   default="$(find ur5_allegro_moveit)/models/ur5_allegro.xacro" />
+    <arg name="lb_x"   default="-.2"/>
+    <arg name="ub_x"   default=".2"/>
+    <arg name="base_link"   default="world"/>
+    <arg name="ee_link"   default="tool0"/>
+
+   <node pkg="bopt_grasp_quality" type="bopt_commander_server.py" name="bo_commander" output="screen"/>
+
+</launch>

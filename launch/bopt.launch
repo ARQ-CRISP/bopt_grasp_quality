@@ -1,0 +1,15 @@
+<!-- USAGE: roslaunch bopt_grasp_quality bopt.launch lb_x:=-.1 ub_x:=.4 base_link:=world ee_link:=tool0 -->
+<launch>
+    <arg name="xacro_path"   default="$(find ur5_allegro_moveit)/models/ur5_allegro.xacro" />
+    <arg name="lb_x"   default="-.2"/>
+    <arg name="ub_x"   default=".2"/>
+    <arg name="base_link"   default="world"/>
+    <arg name="ee_link"   default="tool0"/> 
+
+    <node pkg="bopt_grasp_quality" type="ros_bopt.py" name="bo_quality" output="screen">
+      <param name="lb_x" type="double" value="$(arg lb_x)"/>
+      <param name="ub_x" type="double" value="$(arg ub_x)" />
+      <param name="base_link" type="str" value="$(arg base_link)" />
+      <param name="ee_link" type="str" value="$(arg ee_link)" />
+    </node>
+</launch>
