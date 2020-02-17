@@ -6,9 +6,20 @@ from time import clock, sleep
 import matplotlib.pyplot as plt
 import numpy as np
 from skopt import gp_minimize
+from skopt import callbacks
+from enum import Enum
 
 
 class Skopt_BO():
+    class PARAMS(Enum):
+        iters = 'n_calls'
+        n_restarts = 'n_random_starts'
+        acq_func = 'acq_func'
+        acq_optimizer = 'acq_optimizer'
+        surrogate = 'base_estimator'
+        callbacks = 'callback'
+
+
     def __init__(self, n, f, params=None, lb=None, ub=None):
         self.n_dim = n
         lb = np.zeros((n,)) if lb is None else lb
@@ -16,10 +27,10 @@ class Skopt_BO():
         self.bounds = [(l,u) for l,u in zip(lb,ub)]
         self.min_fun = f
         self.model_params = dict() if params is None else params
-        self.set_defaults()
         self.history_x = []
         self.history_y = []
-        
+        self.stopping_callbacks = []
+        self.set_defaults()
         
     def helper_fun(self, Xin):
         Y = self.min_fun(np.array(Xin))
@@ -27,6 +38,13 @@ class Skopt_BO():
         self.history_y += [Y]
         
         return Y
+
+    def set_Xstopping_callback(self, delta):
+        self.stopping_callbacks.append(callbacks.DeltaXStopper(delta))
+    
+    def set_Ystopping_callback(self, delta):
+        self.stopping_callbacks.append(callbacks.DeltaYStopper(delta))
+        
 
     def set_defaults(self):
         self.model_params.setdefault('base_estimator', None) 
@@ -38,7 +56,7 @@ class Skopt_BO():
         self.model_params.setdefault('y0', None) 
         self.model_params.setdefault('random_state', None )
         self.model_params.setdefault('verbose', False )
-        self.model_params.setdefault('callback', None )
+        self.model_params.setdefault('callback', self.stopping_callbacks )
         self.model_params.setdefault('n_points', 10000 )
         self.model_params.setdefault('n_restarts_optimizer', 1 )
         self.model_params.setdefault('xi', 0.01)

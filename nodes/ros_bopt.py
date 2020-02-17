@@ -19,6 +19,7 @@ class BO_Node():
         rate = rospy.Rate(30)
         self.init_pose = init_pose
         self.optimizer = Skopt_BO(n, self.min_function, params, lb=lb, ub=ub)
+        self.optimizer.set_Xstopping_callback(1e-4)
         self.init_messages(lb, ub, params)
         rospy.wait_for_service(service_name)
         self.send_query = rospy.ServiceProxy(service_name, bopt)
