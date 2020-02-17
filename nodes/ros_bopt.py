@@ -18,10 +18,10 @@ class BO_Node():
         rospy.on_shutdown(self.shutdown)
         rate = rospy.Rate(30)
         self.init_pose = init_pose
+        self.optimizer = Skopt_BO(n, self.min_function, params, lb=lb, ub=ub)
         self.init_messages(lb, ub, params)
         rospy.wait_for_service(service_name)
         self.send_query = rospy.ServiceProxy(service_name, bopt)
-        self.optimizer = Skopt_BO(n, self.min_function, params, lb=lb, ub=ub)
         self.iters = 0
         try:
             x_out, mvalue = self.optimizer.optimize()
@@ -38,6 +38,8 @@ class BO_Node():
         rospy.loginfo(rospy.get_name().split('/')[1] + ': Optimization bounds')
         rospy.loginfo(rospy.get_name().split('/')[1] + ': lower bounds {}'.format(lb.round(3)))
         rospy.loginfo(rospy.get_name().split('/')[1] + ': upper bounds {}'.format(ub.round(3)))
+        rospy.loginfo(rospy.get_name().split('/')[1] + ': N iterations {:d}'.format(params.get('n_calls')))
+        rospy.loginfo(rospy.get_name().split('/')[1] + ': N restarts {:d}'.format(params.get('n_restarts_optimizer')))
             
             
 
@@ -82,6 +84,7 @@ if __name__ == "__main__":
     ee_link = rospy.get_param('~ee_link', 'hand_root')
     base_link = rospy.get_param('~base_link', 'world')
     service_name = rospy.get_param('~commander_service', 'bayes_optimization')
+    n_iter = rospy.get_param('~bopt_iters', 20)
 
     tf_buffer = Buffer(rospy.Duration(50))
     tf_listener = TransformListener(tf_buffer)
@@ -105,9 +108,11 @@ if __name__ == "__main__":
         rospy.get_name().split('/')[1] + ': starting at: ({:.3f}, {:.3f}, {:.3f})-({:.3f}, {:.3f}, {:.3f}, {:.3f})'.format(*pose[0] + pose[1])
         )
 
-    params = {}
+    params = {
+        'n_calls' :n_iter,
+        'n_restarts_optimizer' :1}
     n = 1
     lb = current_pose.pose.position.x + lb_x * np.ones((n,))
     ub = current_pose.pose.position.x + ub_x * np.ones((n,))
     
-    BO_Node(n, params, lb= lb, ub=ub, init_pose=current_pose.pose, service_name=service_name)
+    BO_Node(n, params, lb=lb, ub=ub, init_pose=current_pose.pose, service_name=service_name)
