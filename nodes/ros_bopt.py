@@ -13,14 +13,14 @@ from geometry_msgs.msg import PoseStamped, Pose, Transform
 
 class BO_Node():
 
-    def __init__(self, n, params, lb=None, ub=None, init_pose = Pose()):
+    def __init__(self, n, params, lb=None, ub=None, init_pose = Pose(), service_name='bayes_optimization'):
         
         rospy.on_shutdown(self.shutdown)
         rate = rospy.Rate(30)
         self.init_pose = init_pose
         self.init_messages(lb, ub, params)
-        rospy.wait_for_service('bayes_optimization')
-        self.send_query = rospy.ServiceProxy('bayes_optimization', bopt)
+        rospy.wait_for_service(service_name)
+        self.send_query = rospy.ServiceProxy(service_name, bopt)
         self.optimizer = Skopt_BO(n, self.min_function, params, lb=lb, ub=ub)
         self.iters = 0
         try:
@@ -81,6 +81,7 @@ if __name__ == "__main__":
     ub_x = rospy.get_param('~ub_x', .2)
     ee_link = rospy.get_param('~ee_link', 'hand_root')
     base_link = rospy.get_param('~base_link', 'world')
+    service_name = rospy.get_param('~commander_service', 'bayes_optimization')
 
     tf_buffer = Buffer(rospy.Duration(50))
     tf_listener = TransformListener(tf_buffer)
@@ -109,4 +110,4 @@ if __name__ == "__main__":
     lb = current_pose.pose.position.x + lb_x * np.ones((n,))
     ub = current_pose.pose.position.x + ub_x * np.ones((n,))
     
-    BO_Node(n, params, lb= lb, ub=ub, init_pose=current_pose.pose)
+    BO_Node(n, params, lb= lb, ub=ub, init_pose=current_pose.pose, service_name=service_name)
