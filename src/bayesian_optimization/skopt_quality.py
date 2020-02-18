@@ -30,6 +30,9 @@ class Skopt_BO():
         self.history_x = []
         self.history_y = []
         self.stopping_callbacks = []
+        self.checkpoint_file = None
+        self.deltaY = None
+        self.deltaX = None
         self.set_defaults()
         
     def helper_fun(self, Xin):
@@ -46,6 +49,7 @@ class Skopt_BO():
             self.stopping_callbacks.append(callbacks.DeltaXStopper(delta))
         else:
             current_callback[0].delta = delta
+        self.deltaX = delta
     
     def set_Ystopping_callback(self, delta):
         iscallback = lambda x: isinstance(x, callbacks.DeltaYStopper)
@@ -54,12 +58,17 @@ class Skopt_BO():
             self.stopping_callbacks.append(callbacks.DeltaYStopper(delta))
         else:
             current_callback[0].delta = delta
+        self.deltaY = delta
         
-    def set_checkpointing(self, path):
+    def set_checkpointing(self, filepath):
         iscallback = lambda x: isinstance(x, callbacks.CheckpointSaver)
         current_callback = filter(iscallback, self.stopping_callbacks)
         if len(current_callback) == 0:
-            self.stopping_callbacks.append(callbacks.CheckpointSaver(path, store_objective=False))
+            self.stopping_callbacks.append(callbacks.CheckpointSaver(filepath, store_objective=False))
+        else:
+            current_callback[0].checkpoint_path = filepath
+        self.checkpoint_file = filepath
+        
 
 
     def set_defaults(self):
@@ -87,7 +96,28 @@ class Skopt_BO():
         self.min_value = (res.x[0], res.fun)
         return self.min_value
 
-
+    def plot_result1D(self, n_samples=400):
+        conf95 = 1.96
+        res = self.opt_result
+        fig = plt.figure()
+        plt.ion()
+        plt.title('Estimated Function')
+        x = np.linspace(self.bounds[0][0], self.bounds[0][1], n_samples).reshape(-1, 1)
+        x_gp = res.space.transform(x.tolist())
+        gp = res.models[-1]
+        y_pred, sigma = gp.predict(x_gp, return_std=True)
+        plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
+        plt.fill(
+            np.concatenate([x, x[::-1]]), 
+            np.concatenate([y_pred - conf95 * sigma, (y_pred + conf95 * sigma)[::-1]]), 
+            alpha=.2, fc="g", ec="None")
+            # Plot sampled points
+        plt.plot(self.history_x, self.history_y,
+                "r.", markersize=8, label="Observations")
+        plt.xlabel('X position')
+        plt.legend()
+        plt.draw()
+        plt.pause(0.1)
 
 if __name__ == "__main__":
         

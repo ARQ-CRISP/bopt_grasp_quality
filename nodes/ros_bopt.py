@@ -36,6 +36,7 @@ class BO_Node():
             rospy.logerr('The Service for bayesian optimization has been Terminated prematurely.')
             rospy.logerr('Terminating the node...')
             exit()
+        # self.optimizer.plot_result1D()
         while not rospy.is_shutdown():
             rate.sleep()
 
@@ -44,9 +45,20 @@ class BO_Node():
         rospy.loginfo(rospy.get_name().split('/')[1] + ': lower bounds {}'.format(lb.round(3)))
         rospy.loginfo(rospy.get_name().split('/')[1] + ': upper bounds {}'.format(ub.round(3)))
         rospy.loginfo(rospy.get_name().split('/')[1] + ': N iterations {:d}'.format(params.get('n_calls')))
-        rospy.loginfo(rospy.get_name().split('/')[1] + ': N restarts {:d}'.format(params.get('n_restarts_optimizer')))
-            
-            
+        rospy.loginfo(rospy.get_name().split('/')[1] + ': Acquisition function: {}'.format(params.get('acq_func')))
+        rospy.loginfo(rospy.get_name().split('/')[1] + ': noise in observations: {}'.format(params.get('noise')))
+        
+        if params.get('acq_func') == 'lbfgs':
+            # The parameter make sense only in this case
+            rospy.loginfo(rospy.get_name().split('/')[1] + ': N restarts {:d}'.format(params.get('n_restarts_optimizer')))
+
+        if self.optimizer.deltaX is not None:
+            rospy.loginfo(rospy.get_name().split('/')[1] + ': Stopping when queries are {:.2e} close'.format(self.optimizer.deltaX))
+        if self.optimizer.deltaY is not None:
+            rospy.loginfo(rospy.get_name().split('/')[1] + ': Stopping when best value is lower than {:.3f}'.format(self.optimizer.deltaY))
+        if self.optimizer.checkpoint_file is not None:
+            rospy.loginfo(rospy.get_name().split('/')[1] + ': saving checkpoints at {}'.format(self.optimizer.checkpoint_file))
+    
 
     def min_function(self, Xin):
         p = deepcopy(self.init_pose)
@@ -58,16 +70,6 @@ class BO_Node():
         # res= boptResponse()
         self.iters += 1
         return res.Y
-
-    # def plot_result(self):
-    #     import matplotlib.pyplot as plt
-    #     gp = self.optimizer.opt_result
-    #     y_pred, sigma = gp.predict(x_gp, return_std=True)
-    #     plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
-    #     plt.fill(np.concatenate([x, x[::-1]]),
-    #             np.concatenate([y_pred - 1.9600 * sigma,
-    #                             (y_pred + 1.9600 * sigma)[::-1]]),
-    #             alpha=.2, fc="g", ec="None")
 
     def shutdown(self):
 
