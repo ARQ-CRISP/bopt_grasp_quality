@@ -40,11 +40,27 @@ class Skopt_BO():
         return Y
 
     def set_Xstopping_callback(self, delta):
-        self.stopping_callbacks.append(callbacks.DeltaXStopper(delta))
+        iscallback = lambda x: isinstance(x, callbacks.DeltaXStopper)
+        current_callback = filter(iscallback, self.stopping_callbacks)
+        if len(current_callback) == 0:
+            self.stopping_callbacks.append(callbacks.DeltaXStopper(delta))
+        else:
+            current_callback[0].delta = delta
     
     def set_Ystopping_callback(self, delta):
-        self.stopping_callbacks.append(callbacks.DeltaYStopper(delta))
+        iscallback = lambda x: isinstance(x, callbacks.DeltaYStopper)
+        current_callback = filter(iscallback, self.stopping_callbacks)
+        if len(current_callback) == 0:
+            self.stopping_callbacks.append(callbacks.DeltaYStopper(delta))
+        else:
+            current_callback[0].delta = delta
         
+    def set_checkpointing(self, path):
+        iscallback = lambda x: isinstance(x, callbacks.CheckpointSaver)
+        current_callback = filter(iscallback, self.stopping_callbacks)
+        if len(current_callback) == 0:
+            self.stopping_callbacks.append(callbacks.CheckpointSaver(path, store_objective=False))
+
 
     def set_defaults(self):
         self.model_params.setdefault('base_estimator', None) 

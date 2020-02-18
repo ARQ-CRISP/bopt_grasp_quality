@@ -3,6 +3,7 @@ from __future__ import division, print_function
 
 import numpy as np
 import rospy
+from rospkg.rospack import RosPack
 from copy import deepcopy
 from tf2_ros import TransformListener, Buffer
 from bayesian_optimization import BayesOpt_BO, Skopt_BO
@@ -13,13 +14,16 @@ from geometry_msgs.msg import PoseStamped, Pose, Transform
 
 class BO_Node():
 
-    def __init__(self, n, params, lb=None, ub=None, init_pose = Pose(), service_name='bayes_optimization'):
+    __package_name = 'bopt_grasp_quality'
+    def __init__(self, n, params, lb=None, ub=None, init_pose = Pose(), service_name='bayes_optimization', checkpoint='BayesOpt.pkl'):
         
         rospy.on_shutdown(self.shutdown)
+        pack_path = RosPack().get_path(self.__package_name)
         rate = rospy.Rate(30)
         self.init_pose = init_pose
         self.optimizer = Skopt_BO(n, self.min_function, params, lb=lb, ub=ub)
-        self.optimizer.set_Xstopping_callback(1e-4)
+        self.optimizer.set_Xstopping_callback(1e-3)
+        self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
         self.init_messages(lb, ub, params)
         rospy.wait_for_service(service_name)
         self.send_query = rospy.ServiceProxy(service_name, bopt)
