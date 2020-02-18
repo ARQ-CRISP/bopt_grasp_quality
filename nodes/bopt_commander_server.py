@@ -24,10 +24,12 @@ class Bopt_Commander_Mock():
 
         target = self.ur5_commander.get_named_target_values('start')
         self.ur5_commander.go(target)
-        rate = rospy.Rate(30)
+        rate = rospy.Rate(60)
         axis = [-10, 10, -80, 80]
         axis = [-1, 1, -8, 8]
         fig = plt.figure()
+        plt.title('Metric mock')
+        plt.xlabel('EE x position')
         plt.axis(axis)
         # plt.axis([-1.5, 1.5, 0, 6])
         plt.ion()
@@ -38,9 +40,13 @@ class Bopt_Commander_Mock():
             plt.cla()
             fig.sca(*ax)
             plt.axis(axis)
+
+            plt.title('Metric mock')
+            plt.xlabel('EE x position')
             # fig.sca(fig.get_axes())
             self.plot_fun()
             self.plot_datapoints()
+            plt.legend()
             plt.pause(.01)
             rate.sleep()
 
@@ -52,6 +58,7 @@ class Bopt_Commander_Mock():
         else:
             print("The minimum has been found", (query_msg.minX, query_msg.minY))
             Y = np.nan
+            self.min_value = (query_msg.minX, query_msg.minY)
         # rospy.sleep(.5)
         return boptResponse(Y)
         
@@ -89,21 +96,22 @@ class Bopt_Commander_Mock():
     def plot_datapoints(self):
 
         if len(self.query_hist) > 0:
-            plt.scatter(self.query_hist, self.reply_hist, marker='x')
+            plt.scatter(self.query_hist, self.reply_hist, marker='x', label='sampled points')
             plt.draw()
             text = np.arange(1, len(self.query_hist)).astype(str).tolist()
             for xx, yy, tt in zip(self.query_hist, self.reply_hist, text):
                 plt.text(xx + .1, yy + .1, tt, fontdict={'fontsize': 10},)
 
         if self.min_value is not None:
-            plt.scatter(*self.min_value, marker='o')
+            plt.scatter(*self.min_value, marker='o', label='minimum')
 
 
     def plot_fun(self):
         # plt.clf()
-        plt.plot(x, self.metric_mock(x), 'r')
+        plt.plot(x, self.metric_mock(x), 'r',label='metric function')
         # plt.scatter(, )
         plt.draw()
+        
         # plt.pause(.01)
         
 

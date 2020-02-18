@@ -59,6 +59,15 @@ class BO_Node():
         self.iters += 1
         return res.Y
 
+    # def plot_result(self):
+    #     import matplotlib.pyplot as plt
+    #     gp = self.optimizer.opt_result
+    #     y_pred, sigma = gp.predict(x_gp, return_std=True)
+    #     plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
+    #     plt.fill(np.concatenate([x, x[::-1]]),
+    #             np.concatenate([y_pred - 1.9600 * sigma,
+    #                             (y_pred + 1.9600 * sigma)[::-1]]),
+    #             alpha=.2, fc="g", ec="None")
 
     def shutdown(self):
 
