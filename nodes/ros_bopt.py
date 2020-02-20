@@ -62,7 +62,7 @@ class BO_Node():
 
     def min_function(self, Xin):
         p = deepcopy(self.init_pose)
-        p.position.x = float(Xin)
+        p.position.y = float(Xin)
         rospy.loginfo('{:^10} {}'.format('ITERATION', self.iters))
         rospy.loginfo('Estimating metric at ({:.3f}, {:.3f}, {:.3f}) ...'.format(p.position.x, p.position.y, p.position.z))
         res = self.send_query(p, False, np.nan, np.nan)
@@ -95,8 +95,8 @@ def TF2Pose(TF_msg):
 if __name__ == "__main__":
     rospy.init_node('ros_bo')
 
-    lb_x = rospy.get_param('~lb_x', -.2)
-    ub_x = rospy.get_param('~ub_x', .2)
+    lb_y = rospy.get_param('~lb_x', -.2)
+    ub_y = rospy.get_param('~ub_x', .2)
     ee_link = rospy.get_param('~ee_link', 'hand_root')
     base_link = rospy.get_param('~base_link', 'world')
     service_name = rospy.get_param('~commander_service', 'bayes_optimization')
@@ -128,7 +128,7 @@ if __name__ == "__main__":
         'n_calls' :n_iter,
         'n_restarts_optimizer' :1}
     n = 1
-    lb = current_pose.pose.position.x + lb_x * np.ones((n,))
-    ub = current_pose.pose.position.x + ub_x * np.ones((n,))
+    lb = current_pose.pose.position.y + lb_y * np.ones((n,))
+    ub = current_pose.pose.position.y + ub_y * np.ones((n,))
     
     BO_Node(n, params, lb=lb, ub=ub, init_pose=current_pose.pose, service_name=service_name)

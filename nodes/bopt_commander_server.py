@@ -80,7 +80,7 @@ class Bopt_Commander_Mock():
         # trajectory = self.ur5_commander.plan()
         # self.ur5_commander.execute(trajectory, wait=True)
 
-        x = query.position.x
+        x = query.position.y
         Y = self.metric_mock(x) + np.random.normal(0.0, scale=.05) # the metric is noisy
 
         self.query_hist.append(x)
