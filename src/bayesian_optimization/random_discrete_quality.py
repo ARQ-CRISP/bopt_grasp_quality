@@ -9,28 +9,37 @@ from skopt import gp_minimize
 from skopt import callbacks
 from enum import Enum
 
-def random_search(fun, n, bounds, params):
-    space = [np.arange(bounds[i][0], bounds[i][0], params['diff'][i]) for i in range(n)]
+def random_search(fun, bounds, params):
+    n = len(bounds)
+    space = [np.arange(bounds[i][0], bounds[i][1], params['diff'][i]) for i in range(n)]
     get_sample = lambda : np.array([np.random.choice(space[i]) for i in range(n)]) 
-    Xi = get_sample()
-    Yi = fun(Xi)
 
+    if params['init'] is None: # if None get a random sample
+        Xi = get_sample()
+    else: 
+        if len(params['init']) != n: # if the init value has not the same dimension as the bounds raise Exception
+            raise Exception('Init value should have the same dimension as the bounds. init: {}, bounds: {}'.format(len(params['init']), n))
+        Xi = params['init']
+    
+    Yi = fun(Xi)
     min_point = (Xi, Yi)
+    min_iter = 0
     for itr in range(1, params['n_calls']):
-        print('ITERATION {:d}'.format(itr))
+        print('ITERATION {:d}'.format(itr + 1))
         Xi = get_sample()
 
         Yi = fun(Xi)
         if min_point[1] > Yi:
              min_point = (Xi, Yi)
+             min_iter = itr
     
-    return min_point
+    return min_point, min_iter
 
     
 
 class Random_Explorer():
-    def __init__(self, fun, n, params, lb, ub):
-        self.n_dim = n
+    def __init__(self, n, fun, lb, ub, params=None):
+        self.n_dim = int(n)
         lb = np.zeros((n,)) if lb is None else lb
         ub = np.ones((n,)) if ub is None else ub
         self.bounds = [(l,u) for l,u in zip(lb,ub)]
@@ -52,13 +61,14 @@ class Random_Explorer():
         return Y
     def set_defaults(self):
         self.model_params.setdefault('diff', [.1] * self.n_dim) 
-        self.model_params.setdefault('init', [(lb + ub)/2 for lb, ub in self.bounds]) 
+        self.model_params.setdefault('init', None) # means random init
         self.model_params.setdefault('n_calls', 100) 
 
     def optimize(self):
         res = random_search(self.helper_fun, self.bounds, self.model_params)
         # res = gp_minimize(self.helper_fun, self.bounds, **self.model_params)
-        self.min_value = (res.x[0], res.fun)
+        self.min_value = (res[0][0], res[0][1])
+        self.min_iter = res[1]
         # self.opt_result = res
         return self.min_value
 
@@ -80,6 +90,8 @@ if __name__ == "__main__":
     plt.plot(x, y, 'r')
     plt.scatter(bo.history_x, bo.history_y, marker='x')
     plt.scatter(*bo.min_value, marker='o')
+    plt.text(bo.min_value[0] + .1, bo.min_value[1] + 5, s='{}'.format(bo.min_iter))
+    print('Minimum discovered at iteration {:d}'.format(bo.min_iter))
     # plt.draw()
     # plt.ioff()
     plt.show()
