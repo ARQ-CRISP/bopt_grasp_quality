@@ -7,7 +7,7 @@ import matplotlib.font_manager
 import numpy as np
 from rospkg.rospack import RosPack
 from skopt.acquisition import gaussian_ei
-from skopt.plots import plot_convergence
+# from skopt.plots import plot_convergence
 
 matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 # plt.rcParams["figure.figsize"] = (8, 14)
@@ -15,122 +15,230 @@ plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.sans-serif'] = ['Helvetica']
 
 
-
 pack_name = 'bopt_grasp_quality'
 pkg_path = RosPack().get_path(pack_name)
 
+
 def plot_result1D(result, n_samples=400):
-        conf95 = 1.96
-        result = result
-        fig = plt.figure()
-        plt.ion()
-        plt.title('Estimated Function')
-        history_x = np.array(result.x_iters)
-        history_y = np.array(result.func_vals)
-        
-        x = np.linspace(result.space.bounds[0][0], result.space.bounds[0][1], n_samples).reshape(-1, 1)
-        x_gp = result.space.transform(x.tolist())
-        gp = result.models[-1]
-        y_pred, sigma = gp.predict(x_gp, return_std=True)
-        plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
-        plt.fill(
-            np.concatenate([x, x[::-1]]), 
-            np.concatenate([y_pred - conf95 * sigma, (y_pred + conf95 * sigma)[::-1]]), 
-            alpha=.2, fc="g", ec="None")
-            # Plot sampled points
-        plt.plot(history_x, history_y,
-                "r.", markersize=8, label="Observations")
-        plt.plot(result.x, result.fun, '.y', markersize=10, label='best value')
-        plt.xlabel('X position')
-        plt.legend()
-        plt.draw()
-        plt.pause(0.1)
+    conf95 = 1.96
+    result = result
+    fig = plt.figure()
+    plt.ion()
+    plt.title('Estimated Function')
+    history_x = np.array(result.x_iters)
+    history_y = np.array(result.func_vals)
+
+    x = np.linspace(
+        result.space.bounds[0][0], result.space.bounds[0][1], n_samples).reshape(-1, 1)
+    x_gp = result.space.transform(x.tolist())
+    gp = result.models[-1]
+    y_pred, sigma = gp.predict(x_gp, return_std=True)
+    plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
+    plt.fill(
+        np.concatenate([x, x[::-1]]),
+        np.concatenate(
+            [y_pred - conf95 * sigma, (y_pred + conf95 * sigma)[::-1]]),
+        alpha=.2, fc="g", ec="None")
+    # Plot sampled points
+    plt.plot(history_x, history_y,
+             "r.", markersize=8, label="Observations")
+    plt.plot(result.x, result.fun, '.y', markersize=10, label='best value')
+    plt.xlabel('X position')
+    plt.legend()
+    plt.draw()
+    plt.pause(0.1)
+
 
 def plot_history1D(res, iters, n_samples=400):
-        x = np.linspace(res.space.bounds[0][0], res.space.bounds[0][1], n_samples).reshape(-1, 1)
-        x_gp = res.space.transform(x.tolist())
-        # fx = np.array([f(x_i, noise_level=0.0) for x_i in x])
-        conf95 = 1.96
-        # result = result
-        max_iters = len(res.models)
-        illegal_iters = filter(lambda x: x < 0 or x >= max_iters, iters)
-        iters = filter(lambda x: x >= 0 and x < max_iters, iters)
-        print(2.8 * len(iters))
-        fig = plt.figure(figsize=(8, 2.8 * len(iters)))
-        plt.suptitle('Iteration History')
-        plt.ion()
-        print('WARNING: iterations {} not existing'.format(illegal_iters))
-        for idx, n_iter in enumerate(iters):
-                     
-                gp = res.models[n_iter]
-                plt.subplot(len(iters), 2, 2*idx+1)
-                plt.title('Iteration {:d}'.format(n_iter))       
-                curr_x_iters = res.x_iters[:min(max_iters, n_iter+1)]
-                curr_func_vals = res.func_vals[:min(max_iters, n_iter+1)]
+    x = np.linspace(
+        res.space.bounds[0][0], res.space.bounds[0][1], n_samples).reshape(-1, 1)
+    x_gp = res.space.transform(x.tolist())
+    # fx = np.array([f(x_i, noise_level=0.0) for x_i in x])
+    conf95 = 1.96
+    # result = result
+    max_iters = len(res.models)
+    illegal_iters = filter(lambda x: x < 0 or x >= max_iters, iters)
+    iters = filter(lambda x: x >= 0 and x < max_iters, iters)
+    print(2.8 * len(iters))
+    fig = plt.figure(figsize=(8, 2.8 * len(iters)))
+    plt.suptitle('Iteration History')
+    plt.ion()
+    print('WARNING: iterations {} not existing'.format(illegal_iters))
+    for idx, n_iter in enumerate(iters):
 
-                y_pred, sigma = gp.predict(x_gp, return_std=True)
-                plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
-                plt.fill(np.concatenate([x, x[::-1]]),
-                        np.concatenate([y_pred - conf95 * sigma,
-                                        (y_pred + conf95 * sigma)[::-1]]),
-                        alpha=.2, fc="g", ec="None")
+        gp = res.models[n_iter]
+        plt.subplot(len(iters), 2, 2*idx+1)
+        plt.title('Iteration {:d}'.format(n_iter))
+        curr_x_iters = res.x_iters[:min(max_iters, n_iter+1)]
+        curr_func_vals = res.func_vals[:min(max_iters, n_iter+1)]
 
-                # Plot sampled points
-                plt.plot(curr_x_iters, curr_func_vals,
-                        "r.", markersize=8, label="Observations")
+        y_pred, sigma = gp.predict(x_gp, return_std=True)
+        plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
+        plt.fill(np.concatenate([x, x[::-1]]),
+                 np.concatenate([y_pred - conf95 * sigma,
+                                 (y_pred + conf95 * sigma)[::-1]]),
+                 alpha=.2, fc="g", ec="None")
 
-                # Adjust plot layout
-                plt.grid()
+        # Plot sampled points
+        plt.plot(curr_x_iters, curr_func_vals,
+                 "r.", markersize=8, label="Observations")
 
-                if n_iter + 1 == max_iters:
-                        plt.plot(res.x, res.fun, 'Xc', markersize=14, label='Best value')
+        # Adjust plot layout
+        plt.grid()
 
-                if idx == len(iters)-1:
-                        plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
-                        # plt.legend(loc="best", prop={'size': 6*4/len(iters)}, numpoints=1)
+        if n_iter + 1 == max_iters:
+            plt.plot(res.x, res.fun, 'Xc', markersize=14, label='Best value')
 
-                if idx + 1 != len(iters):
-                        plt.tick_params(axis='x', which='both', bottom='off',
-                                        top='off', labelbottom='off')
+        if idx == len(iters)-1:
+            plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
+            # plt.legend(loc="best", prop={'size': 6*4/len(iters)}, numpoints=1)
 
-                # Plot EI(x)
-                plt.subplot(len(iters), 2, 2*idx+2)
-                acq = gaussian_ei(x_gp, gp, y_opt=np.min(curr_func_vals))
-                plt.plot(x, acq, "b", label="EI(x)")
-                plt.fill_between(x.ravel(), -2.0, acq.ravel(), alpha=0.3, color='blue')
+        if idx + 1 != len(iters):
+            plt.tick_params(axis='x', which='both', bottom='off',
+                            top='off', labelbottom='off')
 
-                next_x = res.x_iters[min(max_iters, n_iter+1)]
-                next_acq = gaussian_ei(res.space.transform([next_x]), gp,
-                                        y_opt=np.min(curr_func_vals))
-                plt.plot(next_x, next_acq, "bo", markersize=6, label="Next query point")
+        # Plot EI(x)
+        plt.subplot(len(iters), 2, 2*idx+2)
+        acq = gaussian_ei(x_gp, gp, y_opt=np.min(curr_func_vals))
+        plt.plot(x, acq, "b", label="EI(x)")
+        plt.fill_between(x.ravel(), -2.0, acq.ravel(), alpha=0.3, color='blue')
 
-                # Adjust plot layout
-                plt.ylim(0, 0.1)
-                plt.grid()
+        next_x = res.x_iters[min(max_iters, n_iter+1)]
+        next_acq = gaussian_ei(res.space.transform([next_x]), gp,
+                               y_opt=np.min(curr_func_vals))
+        plt.plot(next_x, next_acq, "bo", markersize=6,
+                 label="Next query point")
 
-                if idx == len(iters) -1:
-                        plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
-                        # plt.legend(loc="best", prop={'size': 6*4/len(iters)}, numpoints=1)
+        # Adjust plot layout
+        plt.ylim(0, 0.1)
+        plt.grid()
 
-                if idx + 1 != len(iters):
-                        plt.tick_params(axis='x', which='both', bottom='off',
-                                        top='off', labelbottom='off')
+        if idx == len(iters) - 1:
+            plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
+            # plt.legend(loc="best", prop={'size': 6*4/len(iters)}, numpoints=1)
 
-        
-        
-        plt.show()
+        if idx + 1 != len(iters):
+            plt.tick_params(axis='x', which='both', bottom='off',
+                            top='off', labelbottom='off')
 
-def show_convergence1D(res):
-        fig = plt.figure()
-        plot_convergence(res)
-        plt.ion()
-        plt.draw()
-        plt.pause(.1)
+    plt.show()
+
+
+def plot_convergence1D(*args, **kwargs):
+    from scipy.optimize import OptimizeResult
+    """Plot one or several convergence traces.      
+        Parameters
+        ----------
+        args[i] :  `OptimizeResult`, list of `OptimizeResult`, or tuple
+                The result(s) for which to plot the convergence trace.
+
+                - if `OptimizeResult`, then draw the corresponding single trace;
+                - if list of `OptimizeResult`, then draw the corresponding convergence
+                traces in transparency, along with the average convergence trace;
+                - if tuple, then `args[i][0]` should be a string label and `args[i][1]`
+                an `OptimizeResult` or a list of `OptimizeResult`.
+
+        ax : `Axes`, optional
+                The matplotlib axes on which to draw the plot, or `None` to create
+                a new one.
+
+        true_minimum : float, optional
+                The true minimum value of the function, if known.
+
+        yscale : None or string, optional
+                The scale for the y-axis.
+
+        Returns
+        -------
+        ax : `Axes`
+                The matplotlib axes.
+        """
+    fig = plt.figure()
+    plt.ion()
+    # <3 legacy python
+    ax = kwargs.get("ax", None)
+    true_minimum = kwargs.get("true_minimum", None)
+    yscale = kwargs.get("yscale", None)
+
+    if ax is None:
+        ax = plt.gca()
+
+    ax.set_title("Convergence plot")
+    ax.set_xlabel("Number of calls $n$")
+    ax.set_ylabel(r"$\min f(x)$ after $n$ calls")
+    ax.grid()
+
+    if yscale is not None:
+        ax.set_yscale(yscale)
+
+    colors = plt.cm.viridis(np.linspace(0.25, 1.0, len(args)))
+
+    for results, color in zip(args, colors):
+        if isinstance(results, tuple):
+            name, results = results
+        else:
+            name = None
+
+        if isinstance(results, OptimizeResult):
+            n_calls = len(results.x_iters)
+            mins = [np.min(results.func_vals[:i])
+                    for i in range(1, n_calls + 1)]
+            ax.plot(range(1, n_calls + 1), mins, c=color,
+                    marker=".", markersize=12, lw=2, label=name)
+
+        elif isinstance(results, list):
+            n_calls = len(results[0].x_iters)
+            iterations = range(1, n_calls + 1)
+            mins = [[np.min(r.func_vals[:i]) for i in iterations]
+                    for r in results]
+
+            for m in mins:
+                ax.plot(iterations, m, c=color, alpha=0.2)
+
+            ax.plot(iterations, np.mean(mins, axis=0), c=color,
+                    marker=".", markersize=12, lw=2, label=name)
+
+    if true_minimum:
+        ax.axhline(true_minimum, linestyle="--",
+                   color="r", lw=1,
+                   label="True minimum")
+
+    if true_minimum or name:
+        ax.legend(loc="best")
+    plt.draw()
+    plt.pause(.1)
+    return ax
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(
+        prog='show_result', description="Plots the result of 1D BayesOpt Experiments available types ['history', 'result', 'convergence']")
+    parser.add_argument('-f', action='store', dest='file', default='BayesOpt.pkl')
+    parser.add_argument('-t', action='store', dest='type', type=str, default='result')
+    parser.add_argument('-i', action='store', dest='iters', type=int, default=[0, 1, 2, 3, 4], nargs='+')
+
+    parse_res = parser.parse_args()
+    fun_type = {
+        'history': lambda res: plot_history1D(res, parse_res.iters),
+        'result': lambda res: plot_result1D(res),
+        'convergence': lambda res: plot_convergence1D(res)
+        }
+    
+    splitted = parse_res.file.split('/')
+    if len(splitted) == 1:
+        saved_model = pkg_path + '/etc/' + parse_res.file
+    else:
+        saved_model = parse_res.file
+    print('Loading file: {}'.format(saved_model))
+    res = skopt.load(saved_model)
+    if parse_res.type in fun_type.keys():
+        print('Plot type: {}'.format(parse_res.type))
+        fun_type[parse_res.type](res)
+    else:
+        print('[ERROR] requested plot does not exist!')
     
 
-    res = skopt.load(pkg_path + '/etc/' + 'BayesOpt.pkl')
 
-    print(res.x)
+    print('Minima found in: {:.3f}, {:.3f}'.format(res.x[0], res.fun))
+    end = raw_input('Press key to terminate >> ')
