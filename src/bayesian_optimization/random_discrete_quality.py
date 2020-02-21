@@ -49,7 +49,7 @@ class Random_Explorer():
         lb = np.zeros((n,)) if lb is None else lb
         ub = np.ones((n,)) if ub is None else ub
         self.bounds = [(l,u) for l,u in zip(lb,ub)]
-        self.min_fun = f
+        self.min_fun = fun
         self.model_params = dict() if params is None else params
         self.history_x = []
         self.history_y = []
@@ -66,6 +66,9 @@ class Random_Explorer():
         
         return Y
     def set_defaults(self):
+        # self.model_params.setdefault(self.PARAMS.sampling.value, [.1] * self.n_dim) 
+        # self.model_params.setdefault(self.PARAMS.init_pos.value, None) # means random init
+        # self.model_params.setdefault(self.PARAMS.iters.value, 100) 
         self.model_params.setdefault(self.PARAMS.sampling.value, [.1] * self.n_dim) 
         self.model_params.setdefault(self.PARAMS.init_pos.value, None) # means random init
         self.model_params.setdefault(self.PARAMS.iters.value, 100) 
