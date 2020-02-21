@@ -25,7 +25,7 @@ def random_search(fun, bounds, params):
     min_point = (Xi, Yi)
     min_iter = 0
     for itr in range(1, params['n_calls']):
-        print('ITERATION {:d}'.format(itr + 1))
+        # print('ITERATION {:d}'.format(itr + 1))
         Xi = get_sample()
 
         Yi = fun(Xi)
@@ -38,6 +38,12 @@ def random_search(fun, bounds, params):
     
 
 class Random_Explorer():
+
+    class PARAMS(Enum):
+        iters = 'n_calls'
+        init_pos = 'init'
+        sampling = 'diff'
+
     def __init__(self, n, fun, lb, ub, params=None):
         self.n_dim = int(n)
         lb = np.zeros((n,)) if lb is None else lb
@@ -60,9 +66,9 @@ class Random_Explorer():
         
         return Y
     def set_defaults(self):
-        self.model_params.setdefault('diff', [.1] * self.n_dim) 
-        self.model_params.setdefault('init', None) # means random init
-        self.model_params.setdefault('n_calls', 100) 
+        self.model_params.setdefault(self.PARAMS.sampling.value, [.1] * self.n_dim) 
+        self.model_params.setdefault(self.PARAMS.init_pos.value, None) # means random init
+        self.model_params.setdefault(self.PARAMS.iters.value, 100) 
 
     def optimize(self):
         res = random_search(self.helper_fun, self.bounds, self.model_params)
