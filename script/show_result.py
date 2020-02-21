@@ -46,7 +46,7 @@ def plot_result1D(result, n_samples=400):
         plt.draw()
         plt.pause(0.1)
 
-def plot_history(res, iters, n_samples=400):
+def plot_history1D(res, iters, n_samples=400):
         x = np.linspace(res.space.bounds[0][0], res.space.bounds[0][1], n_samples).reshape(-1, 1)
         x_gp = res.space.transform(x.tolist())
         # fx = np.array([f(x_i, noise_level=0.0) for x_i in x])
@@ -120,7 +120,7 @@ def plot_history(res, iters, n_samples=400):
         
         plt.show()
 
-def show_convergence(res):
+def show_convergence1D(res):
         fig = plt.figure()
         plot_convergence(res)
         plt.ion()
