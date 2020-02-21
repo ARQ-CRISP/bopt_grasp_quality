@@ -7,9 +7,10 @@ import matplotlib.font_manager
 import numpy as np
 from rospkg.rospack import RosPack
 from skopt.acquisition import gaussian_ei
+from skopt.plots import plot_convergence
 
 matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
-plt.rcParams["figure.figsize"] = (8, 14)
+# plt.rcParams["figure.figsize"] = (8, 14)
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.sans-serif'] = ['Helvetica']
 
@@ -51,11 +52,13 @@ def plot_history(res, iters, n_samples=400):
         # fx = np.array([f(x_i, noise_level=0.0) for x_i in x])
         conf95 = 1.96
         # result = result
-        fig = plt.figure()
-        plt.ion()
         max_iters = len(res.models)
         illegal_iters = filter(lambda x: x < 0 or x >= max_iters, iters)
         iters = filter(lambda x: x >= 0 and x < max_iters, iters)
+        print(2.8 * len(iters))
+        fig = plt.figure(figsize=(8, 2.8 * len(iters)))
+        plt.suptitle('Iteration History')
+        plt.ion()
         print('WARNING: iterations {} not existing'.format(illegal_iters))
         for idx, n_iter in enumerate(iters):
                      
@@ -80,7 +83,7 @@ def plot_history(res, iters, n_samples=400):
                 plt.grid()
 
                 if n_iter + 1 == max_iters:
-                        plt.plot(res.x, res.fun, '.b', markersize=14, label='best value')
+                        plt.plot(res.x, res.fun, 'Xc', markersize=14, label='Best value')
 
                 if idx == len(iters)-1:
                         plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
@@ -117,6 +120,12 @@ def plot_history(res, iters, n_samples=400):
         
         plt.show()
 
+def show_convergence(res):
+        fig = plt.figure()
+        plot_convergence(res)
+        plt.ion()
+        plt.draw()
+        plt.pause(.1)
 
 
 if __name__ == "__main__":
