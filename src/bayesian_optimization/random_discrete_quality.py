@@ -3,6 +3,7 @@ from __future__ import division, print_function
 
 from time import clock, sleep
 
+from pickle import dump
 import matplotlib.pyplot as plt
 import numpy as np
 from skopt import gp_minimize
@@ -29,6 +30,9 @@ def random_search(fun, bounds, params):
         Xi = get_sample()
 
         Yi = fun(Xi)
+        for ctype, callback in params['callbacks'].items():
+            if ctype == 'checkpointer':
+                callback()
         if min_point[1] > Yi:
              min_point = (Xi, Yi)
              min_iter = itr
@@ -43,6 +47,7 @@ class Random_Explorer():
         iters = 'n_calls'
         init_pos = 'init'
         sampling = 'diff'
+        callbacks = 'callbacks'
 
     def __init__(self, n, fun, lb, ub, params=None):
         self.n_dim = int(n)
@@ -53,18 +58,37 @@ class Random_Explorer():
         self.model_params = dict() if params is None else params
         self.history_x = []
         self.history_y = []
-        self.stopping_callbacks = []
+        self.__callbacks = {}
         self.checkpoint_file = None
-        self.deltaY = None
-        self.deltaX = None
+        self.min_value = None
+        # self.deltaY = None
+        # self.deltaX = None
         self.set_defaults()
     
+    def __save_experiment(self):
+        with open(self.checkpoint_file, 'w') as ff: 
+            experiment_resume = dict()
+            experiment_resume['history'] = (self.history_x, self.history_y)
+            experiment_resume['params'] = { key: value for key, value in self.model_params.items() if key is not 'callbacks'}
+            experiment_resume['bounds'] = self.bounds
+            experiment_resume['found_min'] = self.min_value
+            dump(experiment_resume, ff)
+
+    def set_checkpointing(self, filepath):
+
+        self.checkpoint_file = filepath
+        if 'checkpointer' not in self.__callbacks.keys():
+            self.__callbacks['checkpointer'] = self.__save_experiment
+
+
+
     def helper_fun(self, Xin):
         Y = self.min_fun(np.array(Xin))
-        self.history_x += [Xin]
+        self.history_x += [Xin.tolist()] if isinstance(Xin, np.ndarray) else [Xin]
         self.history_y += [Y]
         
         return Y
+
     def set_defaults(self):
         # self.model_params.setdefault(self.PARAMS.sampling.value, [.1] * self.n_dim) 
         # self.model_params.setdefault(self.PARAMS.init_pos.value, None) # means random init
@@ -72,12 +96,16 @@ class Random_Explorer():
         self.model_params.setdefault(self.PARAMS.sampling.value, [.1] * self.n_dim) 
         self.model_params.setdefault(self.PARAMS.init_pos.value, None) # means random init
         self.model_params.setdefault(self.PARAMS.iters.value, 100) 
+        self.model_params.setdefault(self.PARAMS.callbacks.value, self.__callbacks) 
 
     def optimize(self):
         res = random_search(self.helper_fun, self.bounds, self.model_params)
         # res = gp_minimize(self.helper_fun, self.bounds, **self.model_params)
-        self.min_value = (res[0][0], res[0][1])
+        self.min_value = (res[0][0].tolist(), res[0][1]) if isinstance(res[0][0], np.ndarray) else (res[0][0], res[0][1])
         self.min_iter = res[1]
+        if 'checkpointer' in self.__callbacks.keys():
+            self.__save_experiment()
+        
         # self.opt_result = res
         return self.min_value
 

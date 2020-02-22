@@ -15,13 +15,14 @@ from geometry_msgs.msg import PoseStamped, Pose, Transform
 class RS_Node():
 
     __package_name = 'bopt_grasp_quality'
-    def __init__(self, n, params, lb=None, ub=None, init_pose = Pose(), service_name='bayes_optimization', checkpoint='BayesOpt.pkl'):
+    def __init__(self, n, params, lb=None, ub=None, init_pose = Pose(), service_name='bayes_optimization', checkpoint='RanSrch.pkl'):
         
         rospy.on_shutdown(self.shutdown)
         pack_path = RosPack().get_path(self.__package_name)
         rate = rospy.Rate(30)
         self.init_pose = init_pose
         self.optimizer = Random_Explorer(n, self.min_function, lb=lb, ub=ub, params=params)
+        self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
         # self.optimizer = Random_Explorer(n, self.min_function, params, lb=lb, ub=ub)
         # self.optimizer.set_Xstopping_callback(1e-3)
         # self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
