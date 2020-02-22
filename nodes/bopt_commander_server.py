@@ -15,6 +15,8 @@ class Bopt_Commander_Mock():
     def __init__(self, fun, arm_group='ur5_arm'):
         rospy.init_node('bopt_metric_mock')
         self.ur5_commander = MoveGroupCommander(arm_group)
+        target = self.ur5_commander.get_named_target_values('start')
+        self.ur5_commander.go(target)
         # self.IK = IK('world', 'hand_root', epsilon=1e-3, timeout=0.1, solve_type='Speed')
         self.metric_mock = fun
         self.service = rospy.Service('bayes_optimization', bopt, self.manage_query)
@@ -22,11 +24,9 @@ class Bopt_Commander_Mock():
         self.reply_hist = []
         self.min_value = None
 
-        target = self.ur5_commander.get_named_target_values('start')
-        self.ur5_commander.go(target)
         rate = rospy.Rate(60)
         axis = [-10, 10, -80, 80]
-        axis = [-1, 1, -8, 8]
+        axis = [0, 1, -8, 8]
         fig = plt.figure()
         plt.title('Metric mock')
         plt.xlabel('EE x position')
@@ -118,8 +118,8 @@ class Bopt_Commander_Mock():
 
 if __name__ == "__main__":
     from scipy.stats import norm
-    gaussian1 = lambda x: norm.pdf(x, 0.0, .1)
-    gaussian2 = lambda x: norm.pdf(x, 0.25, .08)
+    gaussian1 = lambda x: norm.pdf(x, 0.5, .1)
+    gaussian2 = lambda x: norm.pdf(x, 0.75, .08)
     l = [-.5 -.3, 0., .3]
     l = [ll for ll in l]
     p = np.poly1d(np.poly(l))
