@@ -47,6 +47,8 @@ class BO_Node():
         rospy.loginfo(rospy.get_name().split('/')[1] + ': N iterations {:d}'.format(params.get('n_calls')))
         rospy.loginfo(rospy.get_name().split('/')[1] + ': Acquisition function: {}'.format(params.get('acq_func')))
         rospy.loginfo(rospy.get_name().split('/')[1] + ': noise in observations: {}'.format(params.get('noise')))
+        rospy.loginfo(rospy.get_name().split('/')[1] + ': xi: {}'.format(params.get('xi')))
+        rospy.loginfo(rospy.get_name().split('/')[1] + ': kappa: {}'.format(params.get('kappa')))
         
         if params.get('acq_func') == 'lbfgs':
             # The parameter make sense only in this case

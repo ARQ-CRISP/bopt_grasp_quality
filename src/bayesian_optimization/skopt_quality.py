@@ -5,8 +5,7 @@ from time import clock, sleep
 
 import matplotlib.pyplot as plt
 import numpy as np
-from skopt import gp_minimize
-from skopt import callbacks
+from skopt import gp_minimize, callbacks, dump
 from enum import Enum
 
 
@@ -18,6 +17,8 @@ class Skopt_BO():
         acq_optimizer = 'acq_optimizer'
         surrogate = 'base_estimator'
         callbacks = 'callback'
+        kappa = 'kappa'
+        xi = 'xi'
 
 
     def __init__(self, n, f, params=None, lb=None, ub=None):
@@ -94,6 +95,8 @@ class Skopt_BO():
         res = gp_minimize(self.helper_fun, self.bounds, **self.model_params)
         self.opt_result = res
         self.min_value = (res.x[0], res.fun)
+        if self.checkpoint_file is not None:
+            dump(res, self.checkpoint_file, store_objective=False)
         return self.min_value
 
     def plot_result1D(self, n_samples=400):
@@ -127,8 +130,10 @@ if __name__ == "__main__":
     n = 1     
 
     f = lambda x: p(x) + 1 * np.sin(2 * np.pi * 3 * x) #+ np.random.normal(0.0, scale=.5)
-
-    bo = Skopt_BO(n, f, lb=-3 * np.ones((1,)), ub=3 * np.ones((1,)))
+    params = {
+        'xi': 1e-2, 
+        'kappa': 1e-2}
+    bo = Skopt_BO(n, f, lb=-3 * np.ones((1,)), ub=3 * np.ones((1,)), params=params)
     res = bo.optimize()
     x = np.arange(-5, 5, 0.01)
     y = f(x)
