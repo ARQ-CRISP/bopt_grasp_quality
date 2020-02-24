@@ -6,7 +6,7 @@ from time import clock, sleep
 from pickle import dump
 import matplotlib.pyplot as plt
 import numpy as np
-from skopt import gp_minimize
+from skopt import dummy_minimize
 from skopt import callbacks
 from enum import Enum
 

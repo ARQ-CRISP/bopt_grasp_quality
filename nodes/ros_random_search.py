@@ -101,6 +101,7 @@ if __name__ == "__main__":
     base_link = rospy.get_param('~base_link', 'world')
     service_name = rospy.get_param('~commander_service', 'bayes_optimization')
     n_iter = rospy.get_param('~search_iters', 20)
+    resolution = rospy.get_param('~resolution', .001)
 
     tf_buffer = Buffer(rospy.Duration(50))
     tf_listener = TransformListener(tf_buffer)
@@ -127,7 +128,7 @@ if __name__ == "__main__":
     params = {
         Random_Explorer.PARAMS.iters.value :n_iter,
         Random_Explorer.PARAMS.init_pos.value : [current_pose.pose.position.y],
-        Random_Explorer.PARAMS.sampling.value : [.1]}
+        Random_Explorer.PARAMS.sampling.value : [resolution]}
     n = 1
     lb = current_pose.pose.position.y + lb_y * np.ones((n,))
     ub = current_pose.pose.position.y + ub_y * np.ones((n,))
