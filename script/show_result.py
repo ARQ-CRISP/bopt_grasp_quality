@@ -95,6 +95,7 @@ def plot_history1D(res, iters, n_samples=400):
         if idx == len(iters)-1:
             plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
             # plt.legend(loc="best", prop={'size': 6*4/len(iters)}, numpoints=1)
+            plt.xlabel('Hand Position (cm)')
 
         if idx + 1 != len(iters):
             plt.tick_params(axis='x', which='both', bottom='off',
@@ -106,8 +107,8 @@ def plot_history1D(res, iters, n_samples=400):
         plt.plot(x*100, acq, "b", label="EI(x)")
         plt.fill_between(x.ravel() *100, -2.0, acq.ravel(), alpha=0.3, color='blue')
 
-        if r_start + n_iter + 2 < max_iters:
-            next_x = res.x_iters[min(max_iters, r_start + n_iter + 1)]
+        if r_start + n_iter + 1 < max_iters:
+            next_x = (res.x_iters + [res.x])[min(max_iters, r_start + n_iter + 1)]
             next_acq = gaussian_ei(res.space.transform([next_x]), gp,
                                 y_opt=np.min(curr_func_vals))
             plt.plot(np.array(next_x) * 100, next_acq, "bo", markersize=6,
