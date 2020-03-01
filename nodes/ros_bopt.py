@@ -127,8 +127,8 @@ if __name__ == "__main__":
         )
 
     params = {
-        'n_calls' :n_iter,
-        'n_restarts_optimizer' :1}
+        Skopt_BO.PARAMS.iters :n_iter,
+        Skopt_BO.PARAMS.n_restarts_optimizer :1}
     n = 1
     lb = current_pose.pose.position.y + lb_y * np.ones((n,))
     ub = current_pose.pose.position.y + ub_y * np.ones((n,))

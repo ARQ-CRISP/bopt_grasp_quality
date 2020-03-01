@@ -6,11 +6,11 @@ from time import clock, sleep
 import matplotlib.pyplot as plt
 import numpy as np
 from skopt import gp_minimize, callbacks, dump
-from enum import Enum
+# from enum import Enum
 
 
 class Skopt_BO():
-    class PARAMS(Enum):
+    class PARAMS():
         iters = 'n_calls'
         n_restarts = 'n_random_starts'
         acq_func = 'acq_func'
@@ -19,6 +19,7 @@ class Skopt_BO():
         callbacks = 'callback'
         kappa = 'kappa'
         xi = 'xi'
+        n_restarts_optimizer = 'n_restarts_optimizer'
 
 
     def __init__(self, n, f, params=None, lb=None, ub=None):
