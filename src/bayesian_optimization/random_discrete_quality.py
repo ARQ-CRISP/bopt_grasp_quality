@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from skopt import dummy_minimize
 from skopt import callbacks
-from enum import Enum
+# from enum import Enum
 
 def random_search(fun, bounds, params):
     n = len(bounds)
@@ -43,7 +43,7 @@ def random_search(fun, bounds, params):
 
 class Random_Explorer():
 
-    class PARAMS(Enum):
+    class PARAMS():
         iters = 'n_calls'
         init_pos = 'init'
         sampling = 'diff'
@@ -93,10 +93,10 @@ class Random_Explorer():
         # self.model_params.setdefault(self.PARAMS.sampling.value, [.1] * self.n_dim) 
         # self.model_params.setdefault(self.PARAMS.init_pos.value, None) # means random init
         # self.model_params.setdefault(self.PARAMS.iters.value, 100) 
-        self.model_params.setdefault(self.PARAMS.sampling.value, [.1] * self.n_dim) 
-        self.model_params.setdefault(self.PARAMS.init_pos.value, None) # means random init
-        self.model_params.setdefault(self.PARAMS.iters.value, 100) 
-        self.model_params.setdefault(self.PARAMS.callbacks.value, self.__callbacks) 
+        self.model_params.setdefault(self.PARAMS.sampling, [.1] * self.n_dim) 
+        self.model_params.setdefault(self.PARAMS.init_pos, None) # means random init
+        self.model_params.setdefault(self.PARAMS.iters, 100) 
+        self.model_params.setdefault(self.PARAMS.callbacks, self.__callbacks) 
 
     def optimize(self):
         res = random_search(self.helper_fun, self.bounds, self.model_params)

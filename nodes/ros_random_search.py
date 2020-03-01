@@ -126,9 +126,9 @@ if __name__ == "__main__":
         )
 
     params = {
-        Random_Explorer.PARAMS.iters.value :n_iter,
-        Random_Explorer.PARAMS.init_pos.value : [current_pose.pose.position.y],
-        Random_Explorer.PARAMS.sampling.value : [resolution]}
+        Random_Explorer.PARAMS.iters :n_iter,
+        Random_Explorer.PARAMS.init_pos : [current_pose.pose.position.y],
+        Random_Explorer.PARAMS.sampling : [resolution]}
     n = 1
     lb = current_pose.pose.position.y + lb_y * np.ones((n,))
     ub = current_pose.pose.position.y + ub_y * np.ones((n,))
