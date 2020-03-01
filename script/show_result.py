@@ -93,7 +93,7 @@ def plot_history1D(res, iters, n_samples=400):
             plt.plot(np.array(res.x) * 100, -res.fun, 'Xc', markersize=14, label='Best value')
 
         if idx == len(iters)-1:
-            plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
+            plt.legend(bbox_to_anchor=(0.5, -0.30), loc='upper center', ncol=2)
             # plt.legend(loc="best", prop={'size': 6*4/len(iters)}, numpoints=1)
             plt.xlabel('Hand Position (cm)')
 
@@ -119,7 +119,8 @@ def plot_history1D(res, iters, n_samples=400):
         plt.grid()
 
         if idx == len(iters) - 1:
-            plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
+            plt.legend(bbox_to_anchor=(0.5, -0.30), loc='upper center', ncol=2)
+            plt.xlabel('Hand Position (cm)')
             # plt.legend(loc="best", prop={'size': 6*4/len(iters)}, numpoints=1)
 
         if idx + 1 != len(iters):
