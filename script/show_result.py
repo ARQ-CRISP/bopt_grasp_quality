@@ -24,7 +24,7 @@ def plot_result1D(result, n_samples=400):
     result = result
     fig = plt.figure()
     plt.ion()
-    plt.title('Estimated Function')
+    plt.title('Estimated Metric')
     history_x = np.array(result.x_iters)
     history_y = np.array(result.func_vals)
 
@@ -33,19 +33,21 @@ def plot_result1D(result, n_samples=400):
     x_gp = result.space.transform(x.tolist())
     gp = result.models[-1]
     y_pred, sigma = gp.predict(x_gp, return_std=True)
-    plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
+    plt.plot(x*100, -y_pred, "g--", label=r"$\mu_{GP}(x)$")
     plt.fill(
-        np.concatenate([x, x[::-1]]),
+        np.concatenate([x, x[::-1]])*100,
         np.concatenate(
-            [y_pred - conf95 * sigma, (y_pred + conf95 * sigma)[::-1]]),
+            [-y_pred - conf95 * sigma, (-y_pred + conf95 * sigma)[::-1]]),
         alpha=.2, fc="g", ec="None")
     # Plot sampled points
-    plt.plot(history_x, history_y,
+    plt.plot(history_x * 100, -history_y,
              "r.", markersize=8, label="Observations")
-    plt.plot(result.x, result.fun, '.y', markersize=10, label='best value')
-    plt.xlabel('X position')
+    plt.plot(np.array(result.x)*100, -result.fun, '.y', markersize=10, label='best value')
+    plt.xlabel('Hand position (cm)')
+    plt.ylabel('Grasp Metric')
     plt.legend()
     plt.draw()
+    plt.grid()
     plt.pause(0.1)
 
 
@@ -55,11 +57,12 @@ def plot_history1D(res, iters, n_samples=400):
     x_gp = res.space.transform(x.tolist())
     # fx = np.array([f(x_i, noise_level=0.0) for x_i in x])
     conf95 = 1.96
+    r_start = len(res.x_iters) - len(res.models)
     # result = result
-    max_iters = len(res.models)
-    illegal_iters = filter(lambda x: x < 0 or x >= max_iters, iters)
-    iters = filter(lambda x: x >= 0 and x < max_iters, iters)
-    print(2.8 * len(iters))
+    max_iters = len(res.x_iters) + 1
+    illegal_iters = filter(lambda x: x < 0 or x >= len(res.models), iters)
+    iters = filter(lambda x: x >= 0 and x < len(res.models), iters)
+    # print(2.8 * len(iters))
     fig = plt.figure(figsize=(8, 2.8 * len(iters)))
     plt.suptitle('Iteration History')
     plt.ion()
@@ -69,25 +72,25 @@ def plot_history1D(res, iters, n_samples=400):
         gp = res.models[n_iter]
         plt.subplot(len(iters), 2, 2*idx+1)
         plt.title('Iteration {:d}'.format(n_iter))
-        curr_x_iters = res.x_iters[:min(max_iters, n_iter+1)]
-        curr_func_vals = res.func_vals[:min(max_iters, n_iter+1)]
+        curr_x_iters = res.x_iters[:min(max_iters, r_start + n_iter+1)]
+        curr_func_vals = res.func_vals[:min(max_iters, r_start + n_iter+1)]
 
         y_pred, sigma = gp.predict(x_gp, return_std=True)
-        plt.plot(x, y_pred, "g--", label=r"$\mu_{GP}(x)$")
-        plt.fill(np.concatenate([x, x[::-1]]),
-                 np.concatenate([y_pred - conf95 * sigma,
+        plt.plot(x * 100, -y_pred, "g--", label=r"$\mu_{GP}(x)$")
+        plt.fill(np.concatenate(np.array([x, x[::-1]]) * 100),
+                 -np.concatenate([y_pred - conf95 * sigma,
                                  (y_pred + conf95 * sigma)[::-1]]),
                  alpha=.2, fc="g", ec="None")
 
         # Plot sampled points
-        plt.plot(curr_x_iters, curr_func_vals,
+        plt.plot(np.array(curr_x_iters) * 100, -np.array(curr_func_vals),
                  "r.", markersize=8, label="Observations")
 
         # Adjust plot layout
         plt.grid()
 
-        if n_iter + 1 == max_iters:
-            plt.plot(res.x, res.fun, 'Xc', markersize=14, label='Best value')
+        if n_iter + 1 == len(res.models):
+            plt.plot(np.array(res.x) * 100, -res.fun, 'Xc', markersize=14, label='Best value')
 
         if idx == len(iters)-1:
             plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
@@ -100,17 +103,18 @@ def plot_history1D(res, iters, n_samples=400):
         # Plot EI(x)
         plt.subplot(len(iters), 2, 2*idx+2)
         acq = gaussian_ei(x_gp, gp, y_opt=np.min(curr_func_vals))
-        plt.plot(x, acq, "b", label="EI(x)")
-        plt.fill_between(x.ravel(), -2.0, acq.ravel(), alpha=0.3, color='blue')
+        plt.plot(x*100, acq, "b", label="EI(x)")
+        plt.fill_between(x.ravel() *100, -2.0, acq.ravel(), alpha=0.3, color='blue')
 
-        next_x = res.x_iters[min(max_iters, n_iter+1)]
-        next_acq = gaussian_ei(res.space.transform([next_x]), gp,
-                               y_opt=np.min(curr_func_vals))
-        plt.plot(next_x, next_acq, "bo", markersize=6,
-                 label="Next query point")
+        if r_start + n_iter + 2 < max_iters:
+            next_x = res.x_iters[min(max_iters, r_start + n_iter + 1)]
+            next_acq = gaussian_ei(res.space.transform([next_x]), gp,
+                                y_opt=np.min(curr_func_vals))
+            plt.plot(np.array(next_x) * 100, next_acq, "bo", markersize=6,
+                    label="Next query point")
 
         # Adjust plot layout
-        plt.ylim(0, 0.1)
+        plt.ylim(0, 1.1)
         plt.grid()
 
         if idx == len(iters) - 1:
