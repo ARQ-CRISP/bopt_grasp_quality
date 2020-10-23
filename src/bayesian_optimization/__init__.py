@@ -7,7 +7,7 @@ except Exception as e:
 try:
     from skopt_quality import Skopt_BO
 except Exception as e:
-    print('WARNING: scikit opt may not be properly installed.')
+    print('WARNING: scikit-opt library may not be properly installed.')
     pass
 
 from random_discrete_quality import Random_Explorer
