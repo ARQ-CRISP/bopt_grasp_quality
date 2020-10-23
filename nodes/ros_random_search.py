@@ -74,13 +74,19 @@ class RS_Node():
 
     def min_function(self, Xin):
         p = deepcopy(self.init_pose)
-        for idx in self.regr_vars:
-            if idx == 0:
-                p.position.x = float(Xin[idx])
-            elif idx == 1:
-                p.position.y = float(Xin[idx])
-            elif idx == 2:
-                p.position.z = float(Xin[idx])
+        init = np.array([
+            self.init_pose.position.x,
+            self.init_pose.position.y,
+            self.init_pose.position.z
+        ])
+        init[self.regr_vars] = Xin
+        for i, v in enumerate(init):
+            if i == 0:
+                p.position.x = float(v)
+            elif i == 1:
+                p.position.y = float(v)
+            elif i == 2:
+                p.position.z = float(v)
         # p.position.y = float(Xin)
         rospy.loginfo('{:^10} {}'.format('ITERATION', self.iters))
         rospy.loginfo('Estimating metric at ({:.3f}, {:.3f}, {:.3f}) ...'.format(p.position.x, p.position.y, p.position.z))

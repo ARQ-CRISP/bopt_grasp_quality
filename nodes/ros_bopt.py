@@ -73,17 +73,20 @@ class BO_Node():
 
     def min_function(self, Xin):
         p = deepcopy(self.init_pose)
-        for idx in self.regr_vars:
-            if idx == 0:
-                p.position.x = float(Xin[idx])
-            elif idx == 1:
-                p.position.y = float(Xin[idx])
-            elif idx == 2:
-                p.position.z = float(Xin[idx])
-        
-        # p.position.x = float(Xin[0])
-        # p.position.y = float(Xin[1])
-        # p.position.z = float(Xin[2])
+        init = np.array([
+            self.init_pose.position.x,
+            self.init_pose.position.y,
+            self.init_pose.position.z
+        ])
+        init[self.regr_vars] = Xin
+        for i, v in enumerate(init):
+            if i == 0:
+                p.position.x = float(v)
+            elif i == 1:
+                p.position.y = float(v)
+            elif i == 2:
+                p.position.z = float(v)
+                
         rospy.loginfo('{:^10} {}'.format('ITERATION', self.iters))
         rospy.loginfo('Estimating metric at ({:.3f}, {:.3f}, {:.3f}) ...'.format(p.position.x, p.position.y, p.position.z))
         res = self.send_query(p, False, [], np.nan)
@@ -116,8 +119,8 @@ def TF2Pose(TF_msg):
 if __name__ == "__main__":
     rospy.init_node('ros_bo')
 
-    lb_x = [float(xx) for xx in rospy.get_param('~lb_x', [-.2, -.2, 0.])]
-    ub_x = [float(xx) for xx in rospy.get_param('~ub_x', [.2, .2, 0.])]
+    lb_x = [float(xx) for xx in rospy.get_param('~lb_x', [0., -.2, -.2])]
+    ub_x = [float(xx) for xx in rospy.get_param('~ub_x', [0., .2, .2])]
     ee_link = rospy.get_param('~ee_link', 'hand_root')
     base_link = rospy.get_param('~base_link', 'world')
     service_name = rospy.get_param('~commander_service', 'bayes_optimization')
