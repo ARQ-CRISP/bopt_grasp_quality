@@ -1,6 +1,6 @@
 geometry_msgs/Pose query
 bool foundmin
-float64 minX
+float64[] minX
 float64 minY
 ---
 float64 Y
