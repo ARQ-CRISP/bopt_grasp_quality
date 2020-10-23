@@ -6,8 +6,8 @@ import rospy
 from rospkg.rospack import RosPack
 from copy import deepcopy
 from tf2_ros import TransformListener, Buffer
-from bayesian_optimization import BayesOpt_BO, Skopt_BO, Random_Explorer
 from bopt_grasp_quality.srv import bopt, boptResponse
+from bayesian_optimization import Random_Explorer
 # from math import nan
 from geometry_msgs.msg import PoseStamped, Pose, Transform
 
@@ -26,15 +26,27 @@ class RS_Node():
         # self.optimizer = Random_Explorer(n, self.min_function, params, lb=lb, ub=ub)
         # self.optimizer.set_Xstopping_callback(1e-3)
         # self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
+        if ub is not None or lb is not None:
+            self.regr_vars = np.where((np.array(ub) - np.array(lb)) >= 1e-6)[0]
+        else:
+            self.regr_vars = np.arange(n)
+
         self.init_messages(lb, ub, params)
         rospy.wait_for_service(service_name)
         self.send_query = rospy.ServiceProxy(service_name, bopt)
         self.iters = 0
         try:
             x_out, mvalue = self.optimizer.optimize()
-            x_out = x_out[0]
-            res = self.send_query(Pose(), True, x_out, mvalue) # here the optimization has finished
-            rospy.loginfo('Minimum has been reached: ({:.3f}, {:.3f})'.format(x_out, mvalue))
+            # x_out = x_out[0]
+
+            x_min = np.array([self.init_pose.position.x, self.init_pose.position.y, self.init_pose.position.z])
+            x_min[self.regr_vars] = np.array(x_out)[self.regr_vars]
+            res = self.send_query(init_pose, True, x_out, mvalue) # here the optimization has finished
+            res = self.send_query(init_pose, True, x_out, mvalue) # here the optimization has finished
+            argmax_x_str = '[' + (', '.join([' {:.3f}'] * len(x_min))).format(*x_min).lstrip() + ']'
+            rospy.loginfo('Minimum has been reached: ({:s}, {:.3f})'.format(argmax_x_str, mvalue))
+            # rospy.loginfo('Minimum has been reached: ({:.3f}, {:.3f})'.format(x_out, mvalue))
+            
         except rospy.ServiceException as e:
             rospy.logerr('The Service for bayesian optimization has been Terminated prematurely.')
             rospy.logerr('Terminating the node...')
@@ -62,10 +74,17 @@ class RS_Node():
 
     def min_function(self, Xin):
         p = deepcopy(self.init_pose)
-        p.position.y = float(Xin)
+        for idx in self.regr_vars:
+            if idx == 0:
+                p.position.x = float(Xin[idx])
+            elif idx == 1:
+                p.position.y = float(Xin[idx])
+            elif idx == 2:
+                p.position.z = float(Xin[idx])
+        # p.position.y = float(Xin)
         rospy.loginfo('{:^10} {}'.format('ITERATION', self.iters))
         rospy.loginfo('Estimating metric at ({:.3f}, {:.3f}, {:.3f}) ...'.format(p.position.x, p.position.y, p.position.z))
-        res = self.send_query(p, False, np.nan, np.nan)
+        res = self.send_query(p, False, [], np.nan)
         rospy.loginfo('Estimatation of the metric obtained: {:.3f}'.format(res.Y))
         # res= boptResponse()
         self.iters += 1
@@ -97,6 +116,8 @@ if __name__ == "__main__":
 
     lb_y = rospy.get_param('~lb_x', -.2)
     ub_y = rospy.get_param('~ub_x', .2)
+    lb_x = [float(xx) for xx in rospy.get_param('~lb_x', [-.2, -.2, 0.])]
+    ub_x = [float(xx) for xx in rospy.get_param('~ub_x', [.2, .2, 0.])]
     ee_link = rospy.get_param('~ee_link', 'hand_root')
     base_link = rospy.get_param('~base_link', 'world')
     service_name = rospy.get_param('~commander_service', 'bayes_optimization')
@@ -125,12 +146,20 @@ if __name__ == "__main__":
         rospy.get_name().split('/')[1] + ': starting at: ({:.3f}, {:.3f}, {:.3f})-({:.3f}, {:.3f}, {:.3f}, {:.3f})'.format(*pose[0] + pose[1])
         )
 
+    n = len(lb_x)
+    init_pos = np.array([
+        current_pose.pose.position.x, 
+        current_pose.pose.position.y,
+        current_pose.pose.position.z])
+    assert(len(lb_x) == len(ub_x))
     params = {
         Random_Explorer.PARAMS.iters :n_iter,
-        Random_Explorer.PARAMS.init_pos : [current_pose.pose.position.y],
-        Random_Explorer.PARAMS.sampling : [resolution]}
-    n = 1
-    lb = current_pose.pose.position.y + lb_y * np.ones((n,))
-    ub = current_pose.pose.position.y + ub_y * np.ones((n,))
+        Random_Explorer.PARAMS.init_pos : init_pos,
+        Random_Explorer.PARAMS.sampling : [resolution] * n}
+    
+    # lb = current_pose.pose.position.y + lb_x * np.ones((n,))
+    # ub = current_pose.pose.position.y + ub_x * np.ones((n,))
+    lb = init_pos[np.arange(len(lb_x))] + lb_x - 1e-10
+    ub = init_pos[np.arange(len(ub_x))] + ub_x 
     
     RS_Node(n, params, lb=lb, ub=ub, init_pose=current_pose.pose, service_name=service_name)

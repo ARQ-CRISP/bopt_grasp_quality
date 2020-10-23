@@ -6,7 +6,8 @@ import rospy
 from rospkg.rospack import RosPack
 from copy import deepcopy
 from tf2_ros import TransformListener, Buffer
-from bayesian_optimization import BayesOpt_BO, Skopt_BO
+# from bayesian_optimization import BayesOpt_BO
+from bayesian_optimization import Skopt_BO
 from bopt_grasp_quality.srv import bopt, boptResponse
 # from math import nan
 from geometry_msgs.msg import PoseStamped, Pose, Transform
@@ -20,18 +21,26 @@ class BO_Node():
         rospy.on_shutdown(self.shutdown)
         pack_path = RosPack().get_path(self.__package_name)
         rate = rospy.Rate(30)
+        if ub is not None or lb is not None:
+            self.regr_vars = np.where((np.array(ub) - np.array(lb)) >= 1e-6)[0]
+        else:
+            self.regr_vars = np.arange(n)
         self.init_pose = init_pose
-        self.optimizer = Skopt_BO(n, self.min_function, params, lb=lb, ub=ub)
+        self.optimizer = Skopt_BO(len(self.regr_vars), self.min_function, params, lb=lb[self.regr_vars], ub=ub[self.regr_vars])
         self.optimizer.set_Xstopping_callback(1e-3)
-        self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
+        if checkpoint is not None:
+            self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
         self.init_messages(lb, ub, params)
         rospy.wait_for_service(service_name)
         self.send_query = rospy.ServiceProxy(service_name, bopt)
         self.iters = 0
         try:
             x_out, mvalue = self.optimizer.optimize()
-            res = self.send_query(Pose(), True, x_out, mvalue) # here the optimization has finished
-            rospy.loginfo('Minimum has been reached: ({:.3f}, {:.3f})'.format(x_out, mvalue))
+            x_min = np.array([self.init_pose.position.x, self.init_pose.position.y, self.init_pose.position.z])
+            x_min[self.regr_vars] = x_out
+            res = self.send_query(init_pose, True, x_min, mvalue) # here the optimization has finished
+            argmax_x_str = '[' + (', '.join([' {:.3f}'] * len(x_min))).format(*x_min).lstrip() + ']'
+            rospy.loginfo('Minimum has been reached: ({:s}, {:.3f})'.format(argmax_x_str, mvalue))
         except rospy.ServiceException as e:
             rospy.logerr('The Service for bayesian optimization has been Terminated prematurely.')
             rospy.logerr('Terminating the node...')
@@ -64,10 +73,20 @@ class BO_Node():
 
     def min_function(self, Xin):
         p = deepcopy(self.init_pose)
-        p.position.y = float(Xin)
+        for idx in self.regr_vars:
+            if idx == 0:
+                p.position.x = float(Xin[idx])
+            elif idx == 1:
+                p.position.y = float(Xin[idx])
+            elif idx == 2:
+                p.position.z = float(Xin[idx])
+        
+        # p.position.x = float(Xin[0])
+        # p.position.y = float(Xin[1])
+        # p.position.z = float(Xin[2])
         rospy.loginfo('{:^10} {}'.format('ITERATION', self.iters))
         rospy.loginfo('Estimating metric at ({:.3f}, {:.3f}, {:.3f}) ...'.format(p.position.x, p.position.y, p.position.z))
-        res = self.send_query(p, False, np.nan, np.nan)
+        res = self.send_query(p, False, [], np.nan)
         rospy.loginfo('Estimatation of the metric obtained: {:.3f}'.format(res.Y))
         # res= boptResponse()
         self.iters += 1
@@ -97,12 +116,13 @@ def TF2Pose(TF_msg):
 if __name__ == "__main__":
     rospy.init_node('ros_bo')
 
-    lb_y = rospy.get_param('~lb_x', -.2)
-    ub_y = rospy.get_param('~ub_x', .2)
+    lb_x = [float(xx) for xx in rospy.get_param('~lb_x', [-.2, -.2, 0.])]
+    ub_x = [float(xx) for xx in rospy.get_param('~ub_x', [.2, .2, 0.])]
     ee_link = rospy.get_param('~ee_link', 'hand_root')
     base_link = rospy.get_param('~base_link', 'world')
     service_name = rospy.get_param('~commander_service', 'bayes_optimization')
     n_iter = rospy.get_param('~bopt_iters', 20)
+    chkpt_file = rospy.get_param('~checkpoint', None)
 
     tf_buffer = Buffer(rospy.Duration(50))
     tf_listener = TransformListener(tf_buffer)
@@ -129,8 +149,15 @@ if __name__ == "__main__":
     params = {
         Skopt_BO.PARAMS.iters :n_iter,
         Skopt_BO.PARAMS.n_restarts_optimizer :1}
-    n = 1
-    lb = current_pose.pose.position.y + lb_y * np.ones((n,))
-    ub = current_pose.pose.position.y + ub_y * np.ones((n,))
+    n = len(lb_x)
+    assert(len(lb_x) == len(ub_x))
+
+    init_pos = np.array([
+        current_pose.pose.position.x, 
+        current_pose.pose.position.y,
+        current_pose.pose.position.z])
+    print(lb_x, init_pos)
+    lb = init_pos[np.arange(len(lb_x))] + lb_x - 1e-10
+    ub = init_pos[np.arange(len(ub_x))] + ub_x 
     
-    BO_Node(n, params, lb=lb, ub=ub, init_pose=current_pose.pose, service_name=service_name)
+    BO_Node(n, params, lb=lb, ub=ub, init_pose=current_pose.pose, service_name=service_name, checkpoint=chkpt_file)

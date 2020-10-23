@@ -12,7 +12,7 @@ from skopt import callbacks
 
 def random_search(fun, bounds, params):
     n = len(bounds)
-    space = [np.arange(bounds[i][0], bounds[i][1], params['diff'][i]) for i in range(n)]
+    space = [np.arange(bounds[i][0], bounds[i][1], params['diff'][i]) if bounds[i][1] - bounds[i][0] >= params['diff'][i] else np.array([bounds[i][0]]) for i in range(n)]
     get_sample = lambda : np.array([np.random.choice(space[i]) for i in range(n)]) 
 
     if params['init'] is None: # if None get a random sample
