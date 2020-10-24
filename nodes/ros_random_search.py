@@ -45,8 +45,7 @@ class RS_Node():
 
             x_min = np.array([self.init_pose.position.x, self.init_pose.position.y, self.init_pose.position.z])
             x_min[self.regr_vars] = np.array(x_out)
-            res = self.send_query(init_pose, True, x_out, mvalue) # here the optimization has finished
-            res = self.send_query(init_pose, True, x_out, mvalue) # here the optimization has finished
+            res = self.send_query(init_pose, True, x_min, mvalue) # here the optimization has finished
             argmax_x_str = '[' + (', '.join([' {:.3f}'] * len(x_min))).format(*x_min).lstrip() + ']'
             rospy.loginfo('Minimum has been reached: ({:s}, {:.3f})'.format(argmax_x_str, mvalue))
             # rospy.loginfo('Minimum has been reached: ({:.3f}, {:.3f})'.format(x_out, mvalue))

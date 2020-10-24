@@ -81,6 +81,7 @@ class Bopt_Commander_Mock():
         orient = [query.orientation.x, query.orientation.y,
                   query.orientation.z, query.orientation.w]
         self.ur5_commander.set_pose_target(target)
+        # self.ur5_commander.set_joint_value_target(query)
         plan = self.ur5_commander.plan()
         self.ur5_commander.execute(plan, wait=True)
         # j_target = self.IK.get_ik(j_states, *pos + [0, 0, 0, 1])
