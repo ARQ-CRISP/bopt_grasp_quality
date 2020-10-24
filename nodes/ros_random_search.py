@@ -21,15 +21,19 @@ class RS_Node():
         pack_path = RosPack().get_path(self.__package_name)
         rate = rospy.Rate(30)
         self.init_pose = init_pose
-        self.optimizer = Random_Explorer(n, self.min_function, lb=lb, ub=ub, params=params)
-        self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
-        # self.optimizer = Random_Explorer(n, self.min_function, params, lb=lb, ub=ub)
-        # self.optimizer.set_Xstopping_callback(1e-3)
-        # self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
         if ub is not None or lb is not None:
             self.regr_vars = np.where((np.array(ub) - np.array(lb)) >= 1e-6)[0]
         else:
             self.regr_vars = np.arange(n)
+        if Random_Explorer.PARAMS.init_pos in params and params[Random_Explorer.PARAMS.init_pos] is not None:
+            params[Random_Explorer.PARAMS.init_pos] = np.array(params[Random_Explorer.PARAMS.init_pos])[self.regr_vars]
+        self.optimizer = Random_Explorer(
+            len(self.regr_vars), self.min_function, 
+            lb=lb[self.regr_vars], ub=ub[self.regr_vars], params=params)
+        self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
+        # self.optimizer = Random_Explorer(n, self.min_function, params, lb=lb, ub=ub)
+        # self.optimizer.set_Xstopping_callback(1e-3)
+        # self.optimizer.set_checkpointing(pack_path + '/etc/' + checkpoint)
 
         self.init_messages(lb, ub, params)
         rospy.wait_for_service(service_name)
@@ -40,7 +44,7 @@ class RS_Node():
             # x_out = x_out[0]
 
             x_min = np.array([self.init_pose.position.x, self.init_pose.position.y, self.init_pose.position.z])
-            x_min[self.regr_vars] = np.array(x_out)[self.regr_vars]
+            x_min[self.regr_vars] = np.array(x_out)
             res = self.send_query(init_pose, True, x_out, mvalue) # here the optimization has finished
             res = self.send_query(init_pose, True, x_out, mvalue) # here the optimization has finished
             argmax_x_str = '[' + (', '.join([' {:.3f}'] * len(x_min))).format(*x_min).lstrip() + ']'
@@ -120,10 +124,10 @@ def TF2Pose(TF_msg):
 if __name__ == "__main__":
     rospy.init_node('ros_bo')
 
-    lb_y = rospy.get_param('~lb_x', -.2)
-    ub_y = rospy.get_param('~ub_x', .2)
-    lb_x = [float(xx) for xx in rospy.get_param('~lb_x', [-.2, -.2, 0.])]
-    ub_x = [float(xx) for xx in rospy.get_param('~ub_x', [.2, .2, 0.])]
+    # lb_y = rospy.get_param('~lb_x', -.2)
+    # ub_y = rospy.get_param('~ub_x', .2)
+    lb_x = [float(xx) for xx in rospy.get_param('~lb_x', [-.2, 0., -.2])]
+    ub_x = [float(xx) for xx in rospy.get_param('~ub_x', [.2, 0., .2])]
     ee_link = rospy.get_param('~ee_link', 'hand_root')
     base_link = rospy.get_param('~base_link', 'world')
     service_name = rospy.get_param('~commander_service', 'bayes_optimization')
