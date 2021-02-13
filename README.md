@@ -12,6 +12,14 @@ Bayesian Optimisation based Grasp Quality Estimation from Hand Pose
 sudo apt-get install libboost-dev cmake cmake-curses-gui g++
 sudo apt-get install python-dev python-numpy
 ```
+### Installation of SkoptOpt
+
+In this package, a customised version of the scikit-opt library is used.
+to install it use the following command
+
+`pip install git+https://github.com/Raziel90/scikit-optimize.git`
+
+The edits have been submitted in a pull request, when those are accepted the official repo can be used.
 
 ### Installation of BayesOpt
 
