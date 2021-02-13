@@ -1,0 +1,29 @@
+<!-- USAGE: roslaunch bopt_grasp_quality bopt.launch lb_x:=-.1 ub_x:=.4 base_link:=world ee_link:=tool0 bopt_iters:=30 commander_service:=/rank/bayes_optimization-->
+<launch>
+    <arg name="xacro_path"   default="$(find ur5_allegro_moveit)/models/ur5_allegro.xacro" />
+    <!-- <arg name="lb_x"   default="[0., -.2, 0.]"/>
+    <arg name="ub_x"   default="[0., .2, 0.]"/> -->
+    <arg name="lb_x"   default="[-0.25, .250, 0.]"/>
+    <arg name="ub_x"   default="[-0.25, .25, 0.]"/>
+    <arg name="base_link"   default="world"/>
+    <arg name="ee_link"   default="tool0"/> 
+    <arg name="bopt_iters"   default="30"/> 
+    <arg name="commander_service"  default="bayes_optimization"/> 
+    <arg name="output_file"  default="BayesOpt.pkl"/> 
+    <arg name="sigma_cov"  default="0.01"/> 
+    <arg name="sigma_params"   default="[.3, 2., .1]"/>
+
+    <node pkg="bopt_grasp_quality" type="ros_bopt.py" name="bo_quality" output="screen">
+      <!-- <param name="lb_x" type="double" value="$(arg lb_x)"/> -->
+      <!-- <param name="ub_x" type="double" value="$(arg ub_x)" /> -->
+      <rosparam param="lb_x" subst_value="True">$(arg lb_x)</rosparam> 
+      <rosparam param="ub_x" subst_value="True">$(arg ub_x)</rosparam> 
+      <param name="checkpoint" type="str" value="$(arg output_file)"/>
+      <param name="base_link" type="str" value="$(arg base_link)" />
+      <param name="ee_link" type="str" value="$(arg ee_link)" />
+      <param name="bopt_iters" type="int" value="$(arg bopt_iters)" />
+      <param name="commander_service" type="str" value="$(arg commander_service)" />
+      <param name="sigma_cov" type="floar" value="$(arg commander_service)" />
+      
+    </node>
+</launch>

@@ -5,11 +5,11 @@ from time import clock, sleep
 
 import matplotlib.pyplot as plt
 import numpy as np
-from skopt import gp_minimize, callbacks, dump
+from skopt import gp_minimize, ugp_minimize, callbacks, dump
 # from enum import Enum
 
 
-class Skopt_BO():
+class Skopt_BO(object):
     class PARAMS():
         iters = 'n_calls'
         n_restarts = 'n_random_starts'
@@ -42,7 +42,7 @@ class Skopt_BO():
         self.history_x += [Xin]
         self.history_y += [Y]
         
-        return Y
+        return float(Y)
 
     def set_Xstopping_callback(self, delta):
         iscallback = lambda x: isinstance(x, callbacks.DeltaXStopper)
