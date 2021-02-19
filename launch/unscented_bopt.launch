@@ -23,7 +23,7 @@
       <param name="ee_link" type="str" value="$(arg ee_link)" />
       <param name="bopt_iters" type="int" value="$(arg bopt_iters)" />
       <param name="commander_service" type="str" value="$(arg commander_service)" />
-      <param name="sigma_cov" type="floar" value="$(arg commander_service)" />
+      <param name="sigma_cov" type="double" value="$(arg sigma_cov)" />
       
     </node>
 </launch>
