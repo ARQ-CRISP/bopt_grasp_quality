@@ -41,6 +41,7 @@ if __name__ == "__main__":
     alpha, beta, kappa = [float(xx) for xx in rospy.get_param('~sigma_params', [.3, 2., .1])]
     n_iter = rospy.get_param('~bopt_iters', 20)
     chkpt_file = rospy.get_param('~checkpoint', None)
+    query_termination_th = rospy.get_param('~Xtermination', None)
 
     tf_buffer = Buffer(rospy.Duration(50))
     tf_listener = TransformListener(tf_buffer)
@@ -83,5 +84,6 @@ if __name__ == "__main__":
         n, params, lb=lb, ub=ub, 
         init_pose=current_pose.pose, service_name=service_name, checkpoint=chkpt_file,
         ut_cov=sigma_cov, sigma_params=sigma_params)
-    
+    if query_termination_th is not None:
+        node.optimizer.set_Xstopping_callback(query_termination_th) 
     node.node_run()

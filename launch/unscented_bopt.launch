@@ -12,6 +12,7 @@
     <arg name="output_file"  default="BayesOpt.pkl"/> 
     <arg name="sigma_cov"  default="0.01"/> 
     <arg name="sigma_params"   default="[.3, 2., .1]"/>
+    <arg name="Xtermination"   default="5e-3"/>
 
     <node pkg="bopt_grasp_quality" type="ros_bopt.py" name="bo_quality" output="screen">
       <!-- <param name="lb_x" type="double" value="$(arg lb_x)"/> -->
@@ -24,6 +25,8 @@
       <param name="bopt_iters" type="int" value="$(arg bopt_iters)" />
       <param name="commander_service" type="str" value="$(arg commander_service)" />
       <param name="sigma_cov" type="double" value="$(arg sigma_cov)" />
+      <!-- <param name="Xtermination" type="double" value="$(arg Xtermination)" /> -->
       
+    
     </node>
 </launch>

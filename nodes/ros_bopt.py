@@ -41,7 +41,8 @@ if __name__ == "__main__":
     service_name = rospy.get_param('~commander_service', 'bayes_optimization')
     n_iter = rospy.get_param('~bopt_iters', 20)
     chkpt_file = rospy.get_param('~checkpoint', None)
-
+    query_termination_th = rospy.get_param('~Xtermination', None)
+    
     tf_buffer = Buffer(rospy.Duration(50))
     tf_listener = TransformListener(tf_buffer)
     rospy.loginfo(rospy.get_name().split('/')[1] + ': Initialization....')
@@ -81,5 +82,6 @@ if __name__ == "__main__":
     node = BO_Node(
         n, params, lb=lb, ub=ub, 
         init_pose=current_pose.pose, service_name=service_name, checkpoint=chkpt_file)
-    
+    if query_termination_th is not None:
+        node.optimizer.set_Xstopping_callback(query_termination_th) 
     node.node_run()

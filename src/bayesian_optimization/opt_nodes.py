@@ -29,7 +29,7 @@ class BO_Node(object):
             lb=lb[self.regr_vars], ub=ub[self.regr_vars])
         
         self.init_messages(lb, ub, params)
-        self.optimizer.set_Xstopping_callback(1e-3)
+        # self.optimizer.set_Xstopping_callback(1e-3)
         if checkpoint is not None:
             self.optimizer.set_checkpointing(self.checkpoint_file)
             
@@ -133,7 +133,7 @@ class UBO_Node(BO_Node):
         self.optimizer = Skopt_UBO(
             len(self.regr_vars), self.min_function, ut_cov, sigma_params, params,
             lb=lb[self.regr_vars], ub=ub[self.regr_vars])
-        self.optimizer.set_Xstopping_callback(1e-3)
+        # self.optimizer.set_Xstopping_callback(1e-3)
         self.init_messages(lb, ub, params)
         if checkpoint is not None:
             self.optimizer.set_checkpointing(self.checkpoint_file)
