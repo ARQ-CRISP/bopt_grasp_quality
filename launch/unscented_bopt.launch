@@ -4,7 +4,7 @@
     <!-- <arg name="lb_x"   default="[0., -.2, 0.]"/>
     <arg name="ub_x"   default="[0., .2, 0.]"/> -->
     <arg name="lb_x"   default="[-0.25, .250, 0.]"/>
-    <arg name="ub_x"   default="[-0.25, .25, 0.]"/>
+    <arg name="ub_x"   default="[-0.25, .25, 0.1]"/>
     <arg name="base_link"   default="world"/>
     <arg name="ee_link"   default="tool0"/> 
     <arg name="bopt_iters"   default="30"/> 
