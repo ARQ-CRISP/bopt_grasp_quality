@@ -5,11 +5,11 @@ from time import clock, sleep
 
 import matplotlib.pyplot as plt
 import numpy as np
-from skopt import gp_minimize, callbacks, dump
+from skopt import gp_minimize, ugp_minimize, callbacks, dump
 # from enum import Enum
 
 
-class Skopt_BO():
+class Skopt_BO(object):
     class PARAMS():
         iters = 'n_calls'
         n_restarts = 'n_random_starts'
@@ -42,7 +42,7 @@ class Skopt_BO():
         self.history_x += [Xin]
         self.history_y += [Y]
         
-        return Y
+        return float(Y)
 
     def set_Xstopping_callback(self, delta):
         iscallback = lambda x: isinstance(x, callbacks.DeltaXStopper)
@@ -72,7 +72,6 @@ class Skopt_BO():
         self.checkpoint_file = filepath
         
 
-
     def set_defaults(self):
         self.model_params.setdefault('base_estimator', None) 
         self.model_params.setdefault('n_calls', 50)
@@ -95,7 +94,7 @@ class Skopt_BO():
     def optimize(self):
         res = gp_minimize(self.helper_fun, self.bounds, **self.model_params)
         self.opt_result = res
-        self.min_value = (res.x[0], res.fun)
+        self.min_value = (res.x, res.fun)
         if self.checkpoint_file is not None:
             dump(res, self.checkpoint_file, store_objective=False)
         return self.min_value
