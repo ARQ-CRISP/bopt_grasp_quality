@@ -10,7 +10,7 @@ project(bopt_grasp_quality)
 find_package(catkin REQUIRED
 std_msgs
 geometry_msgs  
-message_generation
+# message_generation
 roscpp
 rospy
 # service
