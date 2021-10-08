@@ -1,9 +1,5 @@
 #!/bin/python
-try:
-    from bayesopt_quality import BayesOpt_BO
-except Exception as e:
-    print('WARNING: BayesOpt library may not be installed')
-    pass
+# try: LEGACY CODE
 try:
     from skopt_quality import Skopt_BO
     from unscented_skopt_quality import Skopt_UBO
@@ -13,4 +9,4 @@ except Exception as e:
 
 from random_discrete_quality import Random_Explorer
 
-__all__ = ['BayesOpt_BO', 'Skopt_BO', 'Skopt_UBO', 'Random_Explorer']
+__all__ = ['Skopt_BO', 'Skopt_UBO', 'Random_Explorer']

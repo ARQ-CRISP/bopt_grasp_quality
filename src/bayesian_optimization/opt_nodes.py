@@ -6,7 +6,6 @@ import rospy
 from rospkg.rospack import RosPack
 from copy import deepcopy
 from tf2_ros import TransformListener, Buffer
-# from bayesian_optimization import BayesOpt_BO
 from bayesian_optimization import Skopt_BO, Skopt_UBO
 from bayesian_optimization import Random_Explorer
 from bopt_grasp_quality.srv import bopt, boptResponse
